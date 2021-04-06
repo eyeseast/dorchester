@@ -4,7 +4,7 @@ import os
 VERSION = "0.1"
 
 
-requirements = ["click", "fiona", "geojson", "numpy", "shapely"]
+requirements = ["click", "click-default-group", "fiona", "geojson", "numpy", "shapely"]
 
 
 def get_long_description():
