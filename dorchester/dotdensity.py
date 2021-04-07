@@ -1,6 +1,7 @@
-import itertools
 import random
 import sys
+from collections import namedtuple
+from itertools import chain
 
 import fiona
 from fiona.crs import from_epsg
@@ -9,6 +10,8 @@ import geojson
 import numpy as np
 from shapely.geometry import shape
 from shapely.ops import triangulate
+
+Point = namedtuple("Point", ["x", "y", "group", "fid"])
 
 
 def main(src, dest, key="POP10"):
@@ -52,9 +55,11 @@ def points_in_feature(feature, key):
     Get population from feature.properties using *key*
     Concatenate all points yielded from points_in_shape
     """
+    fid = feature.get("id")
     geom = shape(feature["geometry"])
     population = feature["properties"][key]
-    return itertools.chain(*points_in_shape(geom, population))
+    for x, y in chain(*points_in_shape(geom, population)):
+        yield Point(x, y, key, fid)
 
 
 def points_in_shape(geom, population):
@@ -65,7 +70,7 @@ def points_in_shape(geom, population):
     within each triangle, distribute points using a weighted average
     yield each set of points (one yield per triangle)
     """
-    triangles = triangulate(geom)
+    triangles = (t for t in triangulate(geom) if t.within(geom))
     for triangle in triangles:
         ratio = triangle.area / geom.area
         n = round(ratio * population)
@@ -86,6 +91,7 @@ def point_on_triangle(pt1, pt2, pt3):
     )
 
 
+# https://stackoverflow.com/questions/47410054/generate-random-locations-within-a-triangular-domain
 def points_on_triangle(vertices, n):
     """
     Give n random points uniformly on a triangle.
