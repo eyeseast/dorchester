@@ -1,4 +1,5 @@
 import itertools
+import random
 
 import geojson
 import pytest
@@ -10,9 +11,9 @@ from dorchester.cli import cli
 from dorchester import dotdensity
 
 
-def feature(id, **properties):
+def feature(id=None, vertices=5, **properties):
     "Generate a random feature"
-    geometry = geojson.utils.generate_random("Polygon", 10)
+    geometry = geojson.utils.generate_random("Polygon", vertices)
     return geojson.Feature(id, geometry, properties)
 
 
@@ -55,20 +56,23 @@ def test_total_area():
     ratios = [t.area / geom.area for t in triangles]
     counts = [r * f.properties["population"] for r in ratios]
 
+    # account for floats
+    tolerance = 0.0001
+
     # should match
     assert geom.area == sum(t.area for t in triangles)
 
     # make sure we get close
-    assert 1 - sum(ratios) < 0.0001
+    assert 1 - sum(ratios) < tolerance
 
     # should add up
-    assert sum(counts) == f.properties["population"]
+    assert abs(sum(counts) - f.properties["population"]) < tolerance
 
 
 def test_points_in_shape():
     # features = [feature(i, population=(10 * i)) for i in range(5, 50, 10)]
     # for f in features:
-    f = feature(0, population=100)
+    f = feature(0, 8, population=100)
 
     population = f.properties["population"]
     geom = shape(f.geometry)

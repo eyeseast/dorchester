@@ -1,4 +1,4 @@
-import random
+import math
 import sys
 from collections import namedtuple
 from itertools import chain
@@ -77,18 +77,6 @@ def points_in_shape(geom, population):
         vertices = triangle.exterior.coords[:3]
         if n > 0:
             yield points_on_triangle(vertices, n)
-
-
-# https://stackoverflow.com/questions/47410054/generate-random-locations-within-a-triangular-domain
-def point_on_triangle(pt1, pt2, pt3):
-    """
-    Random point on the triangle with vertices pt1, pt2 and pt3.
-    """
-    s, t = sorted([random.random(), random.random()])
-    return (
-        s * pt1[0] + (t - s) * pt2[0] + (1 - t) * pt3[0],
-        s * pt1[1] + (t - s) * pt2[1] + (1 - t) * pt3[1],
-    )
 
 
 # https://stackoverflow.com/questions/47410054/generate-random-locations-within-a-triangular-domain
