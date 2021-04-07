@@ -1,6 +1,8 @@
+"""
+The functions in this module outline the main API for creating the data behind dot density maps.
+"""
 import math
 import sys
-from collections import namedtuple
 from itertools import chain
 
 import fiona
@@ -11,7 +13,7 @@ import numpy as np
 from shapely.geometry import shape
 from shapely.ops import triangulate
 
-Point = namedtuple("Point", ["x", "y", "group", "fid"])
+from .point import Point
 
 
 def main(src, dest, key="POP10"):
@@ -34,8 +36,6 @@ def plot(src, dest, *keys):
     """
     Read from source, write to dest.
     """
-    for point in points(src, *keys):
-        pass
 
 
 def points(src, *keys):

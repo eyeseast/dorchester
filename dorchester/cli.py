@@ -2,8 +2,7 @@ import click
 from click_default_group import DefaultGroup
 
 from . import dotdensity
-
-FORMATS = ("csv", "sqlite", "shapefile", "geojson")
+from .output import FORMATS
 
 
 @click.group(cls=DefaultGroup, default="plot")
@@ -26,7 +25,7 @@ def cli():
 @click.option(
     "-f",
     "--format",
-    type=click.Choice(FORMATS, case_sensitive=False),
+    type=click.Choice(FORMATS.keys(), case_sensitive=False),
     help="Output format. If not given, will guess based on output file extension.",
 )
 def plot(source, dest, keys, format):

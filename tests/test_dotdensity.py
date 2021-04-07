@@ -1,13 +1,10 @@
 import itertools
-import random
 
 import geojson
 import pytest
-from click.testing import CliRunner
 from shapely.geometry import shape
 from shapely.ops import triangulate
 
-from dorchester.cli import cli
 from dorchester import dotdensity
 
 
@@ -30,14 +27,6 @@ def source(tmp_path, feature_collection):
         geojson.dump(feature_collection, f)
 
     return path
-
-
-def test_version():
-    runner = CliRunner()
-    with runner.isolated_filesystem():
-        result = runner.invoke(cli, ["--version"])
-        assert result.exit_code == 0
-        assert result.output.startswith("cli, version ")
 
 
 def test_points_on_triangle():
@@ -77,7 +66,7 @@ def test_points_in_shape():
     geom = shape(f.geometry)
     points = list(itertools.chain(*dotdensity.points_in_shape(geom, population)))
 
-    assert abs(len(points) - population) < tolerance
+    assert abs(len(points) - population) <= tolerance
 
 
 def test_plot_total_points(source):
