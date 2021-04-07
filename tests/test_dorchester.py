@@ -70,21 +70,21 @@ def test_total_area():
 
 
 def test_points_in_shape():
-    # features = [feature(i, population=(10 * i)) for i in range(5, 50, 10)]
-    # for f in features:
     f = feature(0, 8, population=100)
+    tolerance = 2
 
     population = f.properties["population"]
     geom = shape(f.geometry)
     points = list(itertools.chain(*dotdensity.points_in_shape(geom, population)))
 
-    assert len(points) == population
+    assert abs(len(points) - population) < tolerance
 
 
 def test_plot_total_points(source):
     "Check that we're generating the correct number of points across features"
     fc = geojson.loads(source.read_text())
     population = sum(f.properties["population"] for f in fc.features)
+    tolerance = 5
 
     # sanity checks
     assert 10 == len(fc.features)
@@ -92,7 +92,7 @@ def test_plot_total_points(source):
 
     points = list(dotdensity.points(source, "population"))
 
-    assert len(points) == population
+    assert abs(len(points) - population) < tolerance
 
 
 def test_generate_points(source):
