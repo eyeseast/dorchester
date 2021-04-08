@@ -89,3 +89,4 @@ class GeoJSONWriter(Writer):
 
 
 FORMATS = {"csv": CSVWriter, "geojson": GeoJSONWriter}
+FILE_TYPES = {".csv": CSVWriter, ".json": GeoJSONWriter, ".geojson": GeoJSONWriter}

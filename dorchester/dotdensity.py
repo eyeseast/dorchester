@@ -4,6 +4,7 @@ The functions in this module outline the main API for creating the data behind d
 import math
 import sys
 from itertools import chain
+from pathlib import Path
 
 import fiona
 from fiona.crs import from_epsg
@@ -14,6 +15,7 @@ from shapely.geometry import shape
 from shapely.ops import triangulate
 
 from .point import Point
+from .output import FILE_TYPES, FORMATS
 
 
 def main(src, dest, key="POP10"):
@@ -32,10 +34,24 @@ def main(src, dest, key="POP10"):
             sink.write(geojson.dumps(f) + "\n")
 
 
-def plot(src, dest, *keys):
+def plot(src, dest, keys, format=None, mode="w"):
     """
     Read from source, write to dest.
     """
+    src = Path(src)
+    dest = Path(dest)
+
+    if format in FORMATS:
+        Writer = FORMATS[format]
+
+    else:
+        Writer = FILE_TYPES.get(dest.suffix, None)
+
+    if Writer is None:
+        raise TypeError(f"Unknown file type: {dest.name}")
+
+    with Writer(dest, mode) as writer:
+        writer.write_all(points(src, *keys))
 
 
 def points(src, *keys):

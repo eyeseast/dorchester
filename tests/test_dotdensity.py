@@ -1,3 +1,4 @@
+import csv
 import itertools
 
 import geojson
@@ -66,14 +67,14 @@ def test_points_in_shape():
     geom = shape(f.geometry)
     points = list(itertools.chain(*dotdensity.points_in_shape(geom, population)))
 
-    assert abs(len(points) - population) <= tolerance
+    assert abs(len(points) - population) < tolerance
 
 
 def test_plot_total_points(source):
     "Check that we're generating the correct number of points across features"
     fc = geojson.loads(source.read_text())
     population = sum(f.properties["population"] for f in fc.features)
-    tolerance = 5
+    tolerance = 3
 
     # sanity checks
     assert 10 == len(fc.features)
@@ -105,3 +106,18 @@ def test_points_in_polygons(source):
 
     # group points by fid, check that each is within the corresponding polygon
     features = {f.id: f for f in fc.features}
+
+
+def test_plot_csv(source, tmpdir):
+    "Try the whole thing here"
+    dest = tmpdir / "output.csv"
+    fc = geojson.loads(source.read_text())
+    population = sum(f.properties["population"] for f in fc.features)
+    tolerance = 3
+
+    dotdensity.plot(source, dest, ["population"])
+
+    with dest.open() as d:
+        rows = list(csv.DictReader(d))
+
+    assert abs(len(rows) - population) < tolerance
