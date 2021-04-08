@@ -28,7 +28,15 @@ def cli():
     type=click.Choice(FORMATS.keys(), case_sensitive=False),
     help="Output format. If not given, will guess based on output file extension.",
 )
-def plot(source, dest, keys, format):
+@click.option(
+    "-m",
+    "--mode",
+    type=click.Choice(["w", "a", "x"]),
+    default="w",
+    help="File mode for destination.",
+)
+def plot(source, dest, keys, format, mode):
     """
     Generate data for a dot-density map. Input may be any GIS format readable by Fiona (Shapefile, GeoJSON, etc).
     """
+    dotdensity.plot(source, dest, keys, format, mode)

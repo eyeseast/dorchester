@@ -7,27 +7,7 @@ from shapely.geometry import shape
 from shapely.ops import triangulate
 
 from dorchester import dotdensity
-
-
-def feature(id=None, vertices=5, **properties):
-    "Generate a random feature"
-    geometry = geojson.utils.generate_random("Polygon", vertices)
-    return geojson.Feature(id, geometry, properties)
-
-
-@pytest.fixture
-def feature_collection():
-    features = [feature(i, population=100, households=20) for i in range(10)]
-    return geojson.FeatureCollection(features)
-
-
-@pytest.fixture()
-def source(tmp_path, feature_collection):
-    path = tmp_path / "fc.geojson"
-    with path.open("w") as f:
-        geojson.dump(feature_collection, f)
-
-    return path
+from conftest import feature
 
 
 def test_points_on_triangle():
@@ -61,7 +41,7 @@ def test_total_area():
 
 def test_points_in_shape():
     f = feature(0, 8, population=100)
-    tolerance = 2
+    tolerance = 2  # account for rounding
 
     population = f.properties["population"]
     geom = shape(f.geometry)
@@ -74,7 +54,7 @@ def test_plot_total_points(source):
     "Check that we're generating the correct number of points across features"
     fc = geojson.loads(source.read_text())
     population = sum(f.properties["population"] for f in fc.features)
-    tolerance = 3
+    tolerance = 3  # account for rounding
 
     # sanity checks
     assert 10 == len(fc.features)
@@ -113,7 +93,7 @@ def test_plot_csv(source, tmpdir):
     dest = tmpdir / "output.csv"
     fc = geojson.loads(source.read_text())
     population = sum(f.properties["population"] for f in fc.features)
-    tolerance = 3
+    tolerance = 3  # again, rounding
 
     dotdensity.plot(source, dest, ["population"])
 
