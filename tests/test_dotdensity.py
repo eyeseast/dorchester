@@ -3,11 +3,20 @@ import itertools
 
 import geojson
 import pytest
-from shapely.geometry import shape, Point
+from shapely import geometry
 from shapely.ops import triangulate
 
+from dorchester.point import Point
 from dorchester import dotdensity
 from conftest import feature
+
+
+def test_point_to_geo():
+    point = Point(0, 0, "test", 1)
+    geom = geometry.shape(point)
+
+    assert isinstance(geom, geometry.Point)
+    assert (geom.x, geom.y) == (point.x, point.y)
 
 
 def test_points_on_triangle():
@@ -21,7 +30,7 @@ def test_points_on_triangle():
 
 def test_total_area():
     f = feature(0, population=100)
-    geom = shape(f.geometry)
+    geom = geometry.shape(f.geometry)
     triangles = [t for t in triangulate(geom) if t.within(geom)]
     ratios = [t.area / geom.area for t in triangles]
     counts = [r * f.properties["population"] for r in ratios]
@@ -44,7 +53,7 @@ def test_points_in_shape():
     tolerance = 2  # account for rounding
 
     population = f.properties["population"]
-    geom = shape(f.geometry)
+    geom = geometry.shape(f.geometry)
     points = list(itertools.chain(*dotdensity.points_in_shape(geom, population)))
 
     assert abs(len(points) - population) < tolerance
@@ -88,15 +97,15 @@ def test_points_in_polygons(source):
     features = {f.id: f for f in fc.features}
     for point in points:
         feature = features[int(point.fid)]
-        geom = shape(feature.geometry)
-        assert geom.contains(Point(point.x, point.y))
+        geom = geometry.shape(feature.geometry)
+        assert geom.contains(geometry.shape(point))
 
 
 def test_multi_population(source, feature_collection):
     population = sum(f.properties["population"] for f in feature_collection.features)
     households = sum(f.properties["households"] for f in feature_collection.features)
     ratio = households / population
-    tolerance = 3
+    tolerance = 5
     points = sorted(
         dotdensity.points(source, "population", "households"), key=lambda p: p.group
     )
@@ -116,7 +125,7 @@ def test_plot_csv(source, tmpdir):
     dest = tmpdir / "output.csv"
     fc = geojson.loads(source.read_text())
     population = sum(f.properties["population"] for f in fc.features)
-    tolerance = 3  # again, rounding
+    tolerance = 5  # again, rounding
 
     dotdensity.plot(source, dest, ["population"])
 
