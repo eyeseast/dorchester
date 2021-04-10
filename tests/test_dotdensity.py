@@ -3,7 +3,7 @@ import itertools
 
 import geojson
 import pytest
-from shapely.geometry import shape
+from shapely.geometry import shape, Point
 from shapely.ops import triangulate
 
 from dorchester import dotdensity
@@ -86,6 +86,29 @@ def test_points_in_polygons(source):
 
     # group points by fid, check that each is within the corresponding polygon
     features = {f.id: f for f in fc.features}
+    for point in points:
+        feature = features[int(point.fid)]
+        geom = shape(feature.geometry)
+        assert geom.contains(Point(point.x, point.y))
+
+
+def test_multi_population(source, feature_collection):
+    population = sum(f.properties["population"] for f in feature_collection.features)
+    households = sum(f.properties["households"] for f in feature_collection.features)
+    ratio = households / population
+    tolerance = 3
+    points = sorted(
+        dotdensity.points(source, "population", "households"), key=lambda p: p.group
+    )
+
+    groups = {}
+    for group, point_list in itertools.groupby(points, lambda p: p.group):
+        groups[group] = list(point_list)
+
+    assert abs(len(points) - (population + households)) < tolerance
+    assert round(len(groups["households"]) / len(groups["population"]), 2) == round(
+        ratio, 2
+    )
 
 
 def test_plot_csv(source, tmpdir):

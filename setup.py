@@ -35,7 +35,7 @@ setup(
         dorchester=dorchester.cli:cli
     """,
     install_requires=requirements,
-    extras_require={"test": ["pytest", "matplotlib"]},
+    extras_require={"test": ["pytest"]},
     tests_require=["dorchester[test]"],
     python_requires=">=3.6",
 )
