@@ -78,9 +78,7 @@ class GeoJSONWriter(Writer):
         self.fd = open(self.path, self.mode)
 
     def write(self, point):
-        geometry = geojson.Point([point.x, point.y])
-        properties = {"group": point.group, "fid": point.fid}
-        feature = geojson.Feature(geometry=geometry, properties=properties)
+        feature = point.as_feature()
         data = geojson.dumps(feature) + "\n"
         self.fd.write(data)
 
