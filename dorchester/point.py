@@ -11,3 +11,7 @@ class Point(namedtuple("Point", ["x", "y", "group", "fid"])):
         geometry = self.__geo_interface__
         properties = {"group": self.group, "fid": self.fid}
         return {"type": "Feature", "properties": properties, "geometry": geometry}
+
+
+# for structuring error offsets
+Error = namedtuple("Error", ["offset", "group", "fid"])
