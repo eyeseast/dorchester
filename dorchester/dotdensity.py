@@ -18,22 +18,6 @@ from .point import Point
 from .output import FILE_TYPES, FORMATS
 
 
-def main(src, dest, key="POP10"):
-    """
-    Open *src* with fiona
-    Filter out features with no population
-    Run points_in_feature on each feature
-    Write each point as a new Point feature to *dest*
-    """
-    with fiona.open(src) as source, open(dest, "w") as sink:
-        features = filter(lambda f: f["properties"][key] > 0, iter(source))
-        for feature in features:
-            points = points_in_feature(feature, key)
-            multipoint = geojson.MultiPoint(map(list, points))
-            f = geojson.Feature(geometry=multipoint)
-            sink.write(geojson.dumps(f) + "\n")
-
-
 def plot(src, dest, keys, format=None, mode="w"):
     """
     Read from source, write to dest.
