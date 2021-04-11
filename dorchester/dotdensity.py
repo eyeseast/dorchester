@@ -35,10 +35,10 @@ def plot(src, dest, keys, format=None, mode="w"):
         raise TypeError(f"Unknown file type: {dest.name}")
 
     with Writer(dest, mode) as writer:
-        writer.write_all(points(src, *keys))
+        writer.write_all(generate_points(src, *keys))
 
 
-def points(src, *keys):
+def generate_points(src, *keys):
     """
     Generate dot-density data, reading from source and yielding points.
     Any keys given will be used to extract population properties from features.

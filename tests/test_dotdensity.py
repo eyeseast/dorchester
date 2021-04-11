@@ -69,14 +69,14 @@ def test_plot_total_points(source):
     assert 10 == len(fc.features)
     assert 1000 == population
 
-    points = list(dotdensity.points(source, "population"))
+    points = list(dotdensity.generate_points(source, "population"))
 
     assert abs(len(points) - population) < tolerance
 
 
 def test_generate_points(source):
     "Check that we return the right data structure"
-    points = dotdensity.points(source, "population")
+    points = dotdensity.generate_points(source, "population")
 
     point = next(points)
 
@@ -91,7 +91,7 @@ def test_generate_points(source):
 def test_points_in_polygons(source):
     "Check that all points are in the correct polygons"
     fc = geojson.loads(source.read_text())
-    points = dotdensity.points(source, "population")
+    points = dotdensity.generate_points(source, "population")
 
     # group points by fid, check that each is within the corresponding polygon
     features = {f.id: f for f in fc.features}
@@ -107,7 +107,8 @@ def test_multi_population(source, feature_collection):
     ratio = households / population
     tolerance = 5
     points = sorted(
-        dotdensity.points(source, "population", "households"), key=lambda p: p.group
+        dotdensity.generate_points(source, "population", "households"),
+        key=lambda p: p.group,
     )
 
     groups = {}
