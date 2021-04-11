@@ -83,16 +83,16 @@ def points_in_shape(geom, population):
     """
     triangles = (t for t in triangulate(geom) if t.within(geom))
     points = []
-    err = population  # count down as we go
+    offset = -1 * population  # count up as we go
     for triangle in triangles:
         ratio = triangle.area / geom.area
         n = round(ratio * population)
-        err -= n
+        offset += n
         vertices = triangle.exterior.coords[:3]
         if n > 0:
-            points.append(points_on_triangle(vertices, n))
+            points.extend(points_on_triangle(vertices, n))
 
-    return list(chain(*points)), err
+    return points, offset
 
 
 # https://stackoverflow.com/questions/47410054/generate-random-locations-within-a-triangular-domain

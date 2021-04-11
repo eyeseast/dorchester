@@ -55,7 +55,7 @@ def test_points_in_shape():
 
     points, err = dotdensity.points_in_shape(geom, population)
 
-    assert len(points) + err == population
+    assert len(points) - err == population
 
 
 def test_plot_total_points(source):
@@ -67,14 +67,11 @@ def test_plot_total_points(source):
     assert 10 == len(fc.features)
     assert 1000 == population
 
-    points = []
-    total_err = 0
+    points, errors = zip(*dotdensity.generate_points(source, "population"))
+    points = list(itertools.chain(*points))
+    total_err = sum(e.offset for e in errors)
 
-    for p, err in dotdensity.generate_points(source, "population"):
-        points.extend(p)
-        total_err += err.offset
-
-    assert (len(points) + total_err) == population
+    assert (len(points) - total_err) == population
 
 
 def test_generate_points(source):
@@ -124,17 +121,16 @@ def test_multi_population(source, feature_collection):
         groups[group] = list(point_list)
 
     assert (
-        sum([len(points), errors["population"], errors["households"]])
-        == population + households
-    )
+        (len(points) - errors["population"] - errors["households"])
+    ) == population + households
 
     assert (
-        len([p for p in points if p.group == "population"]) + errors["population"]
+        len([p for p in points if p.group == "population"]) - errors["population"]
         == population
     )
 
     assert (
-        len([p for p in points if p.group == "households"]) + errors["households"]
+        len([p for p in points if p.group == "households"]) - errors["households"]
         == households
     )
 
