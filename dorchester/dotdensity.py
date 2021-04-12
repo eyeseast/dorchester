@@ -14,7 +14,7 @@ import numpy as np
 from shapely.geometry import shape
 from shapely.ops import triangulate
 
-from .point import Point
+from .point import Point, Error
 from .output import FILE_TYPES, FORMATS
 
 
@@ -35,18 +35,24 @@ def plot(src, dest, keys, format=None, mode="w"):
         raise TypeError(f"Unknown file type: {dest.name}")
 
     with Writer(dest, mode) as writer:
-        writer.write_all(points(src, *keys))
+        for points, err in generate_points(src, *keys):
+            writer.write_all(points)
+            writer.write_error(err)
 
 
-def points(src, *keys):
+def generate_points(src, *keys):
     """
     Generate dot-density data, reading from source and yielding points.
     Any keys given will be used to extract population properties from features.
+
+    For each feature, yield a two-tuple of:
+     - a list of Point objects
+     - the error offset for this polygon-population combination
     """
     with fiona.open(src) as source:
         for feature in source:
             for key in keys:
-                yield from points_in_feature(feature, key)
+                yield points_in_feature(feature, key)
 
 
 def points_in_feature(feature, key):
@@ -54,12 +60,16 @@ def points_in_feature(feature, key):
     Take a geojson *feature*, create a shape
     Get population from feature.properties using *key*
     Concatenate all points yielded from points_in_shape
+    return a two-tuple of:
+     - a list of Point objects
+     - the error tuple, containing an offset, group name and feature id
     """
     fid = feature.get("id")
     geom = shape(feature["geometry"])
     population = feature["properties"][key]
-    for x, y in chain(*points_in_shape(geom, population)):
-        yield Point(x, y, key, fid)
+    points, err = points_in_shape(geom, population)
+    points = [Point(x, y, key, fid) for (x, y) in points]
+    return points, Error(err, key, fid)
 
 
 def points_in_shape(geom, population):
@@ -68,15 +78,22 @@ def points_in_shape(geom, population):
     first, cut the shape into triangles
     then, give each triangle a portion of points based on relative area
     within each triangle, distribute points using a weighted average
-    yield each set of points (one yield per triangle)
+    return a two-tuple of:
+     - a list of (x, y) coordinates
+     - the error offset for this polygon-population combination
     """
     triangles = (t for t in triangulate(geom) if t.within(geom))
+    points = []
+    offset = -1 * population  # count up as we go
     for triangle in triangles:
         ratio = triangle.area / geom.area
         n = round(ratio * population)
+        offset += n
         vertices = triangle.exterior.coords[:3]
         if n > 0:
-            yield points_on_triangle(vertices, n)
+            points.extend(points_on_triangle(vertices, n))
+
+    return points, offset
 
 
 # https://stackoverflow.com/questions/47410054/generate-random-locations-within-a-triangular-domain
