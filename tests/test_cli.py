@@ -13,8 +13,9 @@ def test_version():
 
 def test_plot(source, feature_collection, tmpdir):
     dest = tmpdir / "output.csv"
+    errors = tmpdir / "output.errors.csv"
     population = sum(f.properties["population"] for f in feature_collection.features)
-    tolerance = 4  # rounding
+    # tolerance = 4  # rounding
     runner = CliRunner()
 
     with runner.isolated_filesystem():
@@ -24,7 +25,9 @@ def test_plot(source, feature_collection, tmpdir):
 
         assert result.exit_code == 0
         assert dest.exists()
+        assert errors.exists()
 
         points = list(csv.DictReader(dest.open()))
+        offset = sum(int(row["offset"]) for row in csv.DictReader(errors.open()))
 
-        assert abs(len(points) - population) < tolerance
+        assert (len(points) - offset) == population
