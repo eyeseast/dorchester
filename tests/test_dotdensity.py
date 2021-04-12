@@ -133,18 +133,3 @@ def test_multi_population(source, feature_collection):
         len([p for p in points if p.group == "households"]) - errors["households"]
         == households
     )
-
-
-def test_plot_csv(source, tmpdir):
-    "Try the whole thing here"
-    dest = tmpdir / "output.csv"
-    fc = geojson.loads(source.read_text())
-    population = sum(f.properties["population"] for f in fc.features)
-    tolerance = 5  # again, rounding
-
-    dotdensity.plot(source, dest, ["population"])
-
-    with dest.open() as d:
-        rows = list(csv.DictReader(d))
-
-    assert abs(len(rows) - population) < tolerance

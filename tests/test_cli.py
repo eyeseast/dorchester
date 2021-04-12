@@ -15,7 +15,6 @@ def test_plot(source, feature_collection, tmpdir):
     dest = tmpdir / "output.csv"
     errors = tmpdir / "output.errors.csv"
     population = sum(f.properties["population"] for f in feature_collection.features)
-    # tolerance = 4  # rounding
     runner = CliRunner()
 
     with runner.isolated_filesystem():
