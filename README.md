@@ -5,7 +5,11 @@
 [![Tests](https://github.com/eyeseast/dorchester/workflows/Test/badge.svg)](https://github.com/eyeseast/dorchester/actions?query=workflow%3ATest)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/eyeseast/dorchester/blob/master/LICENSE)
 
-A toolkit for making dot-density maps in Python
+## Caveat emptor
+
+This is very alpha right now. Use at your own risk and evaluate any editorial usage of this of this library before publishing.
+
+A toolkit for making dot-density maps in Python (eventually).
 
 ## Installation
 
