@@ -39,7 +39,12 @@ class Writer:
 
     def _get_error_path(self):
         stem = self.path.stem
-        return self.path.with_stem(f"{stem}.errors")
+        parent = self.path.parent
+        suffixes = self.path.suffixes
+
+        suffixes.insert(0, ".errors")
+        name = stem + "".join(suffixes)
+        return parent / name
 
     def open(self):
         raise NotImplementedError
