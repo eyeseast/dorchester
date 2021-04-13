@@ -37,7 +37,8 @@ def plot(src, dest, keys, format=None, mode="w"):
     with Writer(dest, mode) as writer:
         for points, err in generate_points(src, *keys):
             writer.write_all(points)
-            writer.write_error(err)
+            if err.offset != 0:
+                writer.write_error(err)
 
 
 def generate_points(src, *keys):

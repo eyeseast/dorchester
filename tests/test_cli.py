@@ -11,7 +11,7 @@ def test_version():
         assert result.output.startswith("cli, version ")
 
 
-def test_plot(source, feature_collection, tmpdir):
+def test_plot(tmpdir, source, feature_collection):
     dest = tmpdir / "output.csv"
     errors = tmpdir / "output.errors.csv"
     population = sum(f.properties["population"] for f in feature_collection.features)
@@ -30,3 +30,23 @@ def test_plot(source, feature_collection, tmpdir):
         offset = sum(int(row["offset"]) for row in csv.DictReader(errors.open()))
 
         assert (len(points) - offset) == population
+
+
+def test_no_zeroes(tmpdir, source):
+    dest = tmpdir / "output.csv"
+    errors = tmpdir / "output.errors.csv"
+    runner = CliRunner()
+
+    with runner.isolated_filesystem():
+        result = runner.invoke(
+            cli, ["plot", str(source), str(dest), "--key", "population"]
+        )
+
+        assert result.exit_code == 0
+        assert dest.exists()
+        assert errors.exists()
+
+        offsets = [int(row["offset"]) for row in csv.DictReader(errors.open())]
+        zeroes = [i for i in offsets if i == 0]
+
+        assert len(zeroes) == 0
