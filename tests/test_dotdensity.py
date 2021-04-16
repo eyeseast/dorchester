@@ -133,3 +133,12 @@ def test_multi_population(source, feature_collection):
         len([p for p in points if p.group == "households"]) - errors["households"]
         == households
     )
+
+
+def test_custom_fid():
+    f = feature(None, 5, geoid="01", population=100)
+    points, err = dotdensity.points_in_feature(f, "population", fid_field="geoid")
+
+    assert "01" == err.fid
+    for point in points:
+        assert "01" == point.fid

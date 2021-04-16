@@ -18,7 +18,7 @@ from .point import Point, Error
 from .output import FILE_TYPES, FORMATS
 
 
-def plot(src, dest, keys, format=None, mode="w"):
+def plot(src, dest, keys, format=None, mode="w", fid_field=None):
     """
     Read from source, write to dest.
     """
@@ -35,13 +35,13 @@ def plot(src, dest, keys, format=None, mode="w"):
         raise TypeError(f"Unknown file type: {dest.name}")
 
     with Writer(dest, mode) as writer:
-        for points, err in generate_points(src, *keys):
+        for points, err in generate_points(src, *keys, fid_field=fid_field):
             writer.write_all(points)
             if err.offset != 0:
                 writer.write_error(err)
 
 
-def generate_points(src, *keys):
+def generate_points(src, *keys, fid_field=None):
     """
     Generate dot-density data, reading from source and yielding points.
     Any keys given will be used to extract population properties from features.
@@ -53,10 +53,10 @@ def generate_points(src, *keys):
     with fiona.open(src) as source:
         for feature in source:
             for key in keys:
-                yield points_in_feature(feature, key)
+                yield points_in_feature(feature, key, fid_field=fid_field)
 
 
-def points_in_feature(feature, key):
+def points_in_feature(feature, key, fid_field=None):
     """
     Take a geojson *feature*, create a shape
     Get population from feature.properties using *key*
@@ -65,7 +65,10 @@ def points_in_feature(feature, key):
      - a list of Point objects
      - the error tuple, containing an offset, group name and feature id
     """
-    fid = feature.get("id")
+    if fid_field is not None:
+        fid = feature["properties"].get(fid_field)
+    else:
+        fid = feature.get("id")
     geom = shape(feature["geometry"])
     population = feature["properties"][key]
     points, err = points_in_shape(geom, population)

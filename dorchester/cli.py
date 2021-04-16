@@ -35,8 +35,15 @@ def cli():
     default="w",
     help="File mode for destination.",
 )
-def plot(source, dest, keys, format, mode):
+@click.option(
+    "--fid",
+    "fid_field",
+    type=click.STRING,
+    help="Use a property key (instead of feature.id) to uniquely identify each feature",
+    default=None,
+)
+def plot(source, dest, keys, format, mode, fid_field=None):
     """
     Generate data for a dot-density map. Input may be any GIS format readable by Fiona (Shapefile, GeoJSON, etc).
     """
-    dotdensity.plot(source, dest, keys, format, mode)
+    dotdensity.plot(source, dest, keys, format, mode, fid_field)
