@@ -75,7 +75,7 @@ def points_in_feature(feature, key, fid_field=None, coerce=False):
         fid = feature.get("id")
 
     geom = shape(feature["geometry"])
-    population = feature["properties"][key]
+    population = feature["properties"].get(key) or 0  # handle missing or None
     if coerce:
         # let this fail if it fails
         population = int(population)
