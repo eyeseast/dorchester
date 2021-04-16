@@ -142,3 +142,21 @@ def test_custom_fid():
     assert "01" == err.fid
     for point in points:
         assert "01" == point.fid
+
+
+def test_coerce_to_int():
+    f = feature(None, 5, geoid="01", population="100")
+    points, err = dotdensity.points_in_feature(f, "population", coerce=True)
+
+    assert 100 == (len(points) - err.offset)
+
+
+def test_missing_field():
+    f = feature(1, 5, population=100, cats=None)
+    points, err = dotdensity.points_in_feature(f, "households", coerce=True)
+
+    assert len(points) == 0
+
+    points, err = dotdensity.points_in_feature(f, "cats", coerce=True)
+
+    assert len(points) == 0

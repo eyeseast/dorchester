@@ -42,8 +42,15 @@ def cli():
     help="Use a property key (instead of feature.id) to uniquely identify each feature",
     default=None,
 )
-def plot(source, dest, keys, format, mode, fid_field=None):
+@click.option(
+    "--coerce",
+    type=click.BOOL,
+    is_flag=True,
+    default=False,
+    help="Coerce properties passed in --key to integers. BE CAREFUL. This could cause incorrect results if misused.",
+)
+def plot(source, dest, keys, format, mode, fid_field, coerce):
     """
     Generate data for a dot-density map. Input may be any GIS format readable by Fiona (Shapefile, GeoJSON, etc).
     """
-    dotdensity.plot(source, dest, keys, format, mode, fid_field)
+    dotdensity.plot(source, dest, keys, format, mode, fid_field, coerce)

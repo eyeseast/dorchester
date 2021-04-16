@@ -11,7 +11,8 @@ def feature(id=None, vertices=5, **properties):
 @pytest.fixture()
 def feature_collection():
     features = [
-        feature(i, population=100, households=20, geoid=f"{i:03}") for i in range(10)
+        feature(i, population=100, households=20, cats="5", geoid=f"{i:03}")
+        for i in range(10)
     ]
     return geojson.FeatureCollection(features)
 
