@@ -77,3 +77,25 @@ def test_custom_fid(tmpdir, source, feature_collection):
 
     for feature in feature_collection.features:
         assert feature.properties["geoid"] in groups
+
+
+def test_coerce_ints(tmpdir, source, feature_collection):
+    dest = tmpdir / "output.csv"
+    errors = tmpdir / "output.errors.csv"
+    cats = sum(int(f.properties["cats"]) for f in feature_collection.features)
+    runner = CliRunner()
+
+    with runner.isolated_filesystem():
+        result = runner.invoke(
+            cli,
+            ["plot", str(source), str(dest), "--key", "cats", "--coerce"],
+        )
+
+        assert result.exit_code == 0
+        assert dest.exists()
+        assert errors.exists()
+
+        points = list(csv.DictReader(dest.open()))
+        offset = sum(int(row["offset"]) for row in csv.DictReader(errors.open()))
+
+        assert (len(points) - offset) == cats

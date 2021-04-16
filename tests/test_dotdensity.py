@@ -142,3 +142,10 @@ def test_custom_fid():
     assert "01" == err.fid
     for point in points:
         assert "01" == point.fid
+
+
+def test_coerce_to_int():
+    f = feature(None, 5, geoid="01", population="100")
+    points, err = dotdensity.points_in_feature(f, "population", coerce=True)
+
+    assert 100 == (len(points) - err.offset)
