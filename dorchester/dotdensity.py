@@ -81,7 +81,7 @@ def points_in_feature(feature, key, fid_field=None, coerce=False):
         population = int(population)
 
     points, err = points_in_shape(geom, population)
-    points = [Point(x, y, key, fid) for (x, y) in points]
+    points = (Point(x, y, key, fid) for (x, y) in points)
     return points, Error(err, key, fid)
 
 

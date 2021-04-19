@@ -86,7 +86,8 @@ def test_write_errors(tmpdir, source):
     errors = []
 
     with CSVWriter(path) as writer:
-        for p_list, error in dotdensity.generate_points(source, "population"):
+        for p, error in dotdensity.generate_points(source, "population"):
+            p_list = list(p)
             points.extend(p_list)
             errors.append(error)
             writer.write_all(p_list)

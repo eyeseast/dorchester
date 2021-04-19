@@ -79,6 +79,7 @@ def test_generate_points(source):
     gen = dotdensity.generate_points(source, "population")
 
     points, err = next(gen)
+    points = list(points)
     point = points[0]
 
     assert isinstance(err, Error)
@@ -148,15 +149,15 @@ def test_coerce_to_int():
     f = feature(None, 5, geoid="01", population="100")
     points, err = dotdensity.points_in_feature(f, "population", coerce=True)
 
-    assert 100 == (len(points) - err.offset)
+    assert 100 == (len(list(points)) - err.offset)
 
 
 def test_missing_field():
     f = feature(1, 5, population=100, cats=None)
     points, err = dotdensity.points_in_feature(f, "households", coerce=True)
-
+    points = list(points)
     assert len(points) == 0
 
     points, err = dotdensity.points_in_feature(f, "cats", coerce=True)
 
-    assert len(points) == 0
+    assert len(list(points)) == 0

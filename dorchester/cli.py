@@ -54,3 +54,8 @@ def plot(source, dest, keys, format, mode, fid_field, coerce):
     Generate data for a dot-density map. Input may be any GIS format readable by Fiona (Shapefile, GeoJSON, etc).
     """
     dotdensity.plot(source, dest, keys, format, mode, fid_field, coerce)
+
+
+# for profiling
+if __name__ == "__main__":
+    cli()
