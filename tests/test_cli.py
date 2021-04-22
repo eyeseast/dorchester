@@ -129,4 +129,3 @@ def test_coerce_ints(tmpdir, source, feature_collection):
         offset = sum(int(row["offset"]) for row in csv.DictReader(errors.open()))
 
         assert (len(points) - offset) == cats
-

@@ -1,8 +1,13 @@
+from pathlib import Path
+
 import click
+import fiona
+
 from click_default_group import DefaultGroup
+from tqdm import tqdm
 
 from . import dotdensity
-from .output import FORMATS
+from .output import FILE_TYPES, FORMATS
 
 
 @click.group(cls=DefaultGroup, default="plot")
@@ -33,7 +38,8 @@ def cli():
     "--mode",
     type=click.Choice(["w", "a", "x"]),
     default="w",
-    help="File mode for destination.",
+    show_default=True,
+    help="File mode for destination",
 )
 @click.option(
     "--fid",
@@ -49,8 +55,45 @@ def cli():
     default=False,
     help="Coerce properties passed in --key to integers. BE CAREFUL. This could cause incorrect results if misused.",
 )
-def plot(source, dest, keys, format, mode, fid_field, coerce):
+@click.option(
+    "--progress",
+    type=click.BOOL,
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Show a progress bar",
+)
+def plot(source, dest, keys, format, mode, fid_field, coerce, progress):
     """
     Generate data for a dot-density map. Input may be any GIS format readable by Fiona (Shapefile, GeoJSON, etc).
     """
-    dotdensity.plot(source, dest, keys, format, mode, fid_field, coerce)
+    source = Path(source)
+    dest = Path(dest)
+
+    if format in FORMATS:
+        Writer = FORMATS[format]
+
+    else:
+        Writer = FILE_TYPES.get(dest.suffix, None)
+
+    if Writer is None:
+        raise click.UsageError(f"Unknown file type: {dest.name}")
+
+    generator = dotdensity.generate_points(
+        source, *keys, fid_field=fid_field, coerce=coerce
+    )
+    if progress:
+        count = get_feature_count(source)
+        generator = tqdm(generator, total=count, unit="features")
+
+    with Writer(dest, mode) as writer:
+        for points, err in generator:
+            writer.write_all(points)
+            if err.offset != 0:
+                writer.write_error(err)
+
+
+# for progress bars
+def get_feature_count(source):
+    with fiona.open(source) as fc:
+        return len(fc)
