@@ -1,8 +1,10 @@
+from pathlib import Path
+
 import click
 from click_default_group import DefaultGroup
 
 from . import dotdensity
-from .output import FORMATS
+from .output import FILE_TYPES, FORMATS
 
 
 @click.group(cls=DefaultGroup, default="plot")
@@ -33,6 +35,7 @@ def cli():
     "--mode",
     type=click.Choice(["w", "a", "x"]),
     default="w",
+    show_default=True,
     help="File mode for destination.",
 )
 @click.option(
@@ -53,4 +56,22 @@ def plot(source, dest, keys, format, mode, fid_field, coerce):
     """
     Generate data for a dot-density map. Input may be any GIS format readable by Fiona (Shapefile, GeoJSON, etc).
     """
-    dotdensity.plot(source, dest, keys, format, mode, fid_field, coerce)
+    source = Path(source)
+    dest = Path(dest)
+
+    if format in FORMATS:
+        Writer = FORMATS[format]
+
+    else:
+        Writer = FILE_TYPES.get(dest.suffix, None)
+
+    if Writer is None:
+        raise click.UsageError(f"Unknown file type: {dest.name}")
+
+    with Writer(dest, mode) as writer:
+        for points, err in dotdensity.generate_points(
+            source, *keys, fid_field=fid_field, coerce=coerce
+        ):
+            writer.write_all(points)
+            if err.offset != 0:
+                writer.write_error(err)
