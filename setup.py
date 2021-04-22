@@ -36,7 +36,7 @@ setup(
     """,
     install_requires=requirements,
     extras_require={
-        "test": ["pytest"],
+        "test": ["pytest", 'pytest-xdist'],
         "notebooks": ["jupyter", "matplotlib", "descartes"],
     },
     tests_require=["dorchester[test]"],
