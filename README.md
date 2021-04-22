@@ -36,7 +36,15 @@ Options:
                               output file extension.
 
   -m, --mode [w|a|x]          File mode for destination.
-  --help                      Show this message and exit
+  --fid TEXT                  Use a property key (instead of feature.id) to
+                              uniquely identify each feature
+
+  --coerce                    Coerce properties passed in --key to integers.
+                              BE CAREFUL. This could cause incorrect results
+                              if misused.
+
+  --help                      Show this message and exit.
+
 ```
 
 Input can be in any format readable by [Fiona](https://fiona.readthedocs.io/en/stable/index.html), such as Shapefiles and GeoJSON. The input file needs to contain both population data and boundaries. You may need to join different files together before plotting with `dorchester`.
