@@ -14,4 +14,4 @@ tests/data/suffolk.geojson: tests/data/shp/tabblock2010_25_pophu.shp
 	fio cat $^ | fio filter "f.properties.COUNTYFP10 == '025'" | fio collect > $@
 
 tests/data/suffolk.csv: tests/data/suffolk.geojson
-	dorchester plot $^ $@ --key POP10
+	dorchester plot $^ $@ --key POP10 --progress
