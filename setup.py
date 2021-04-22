@@ -4,7 +4,15 @@ import os
 VERSION = "0.2"
 
 
-requirements = ["click", "click-default-group", "fiona", "geojson", "numpy", "shapely"]
+requirements = [
+    "click",
+    "click-default-group",
+    "fiona",
+    "geojson",
+    "numpy",
+    "shapely",
+    "tqdm",
+]
 
 
 def get_long_description():
@@ -36,7 +44,7 @@ setup(
     """,
     install_requires=requirements,
     extras_require={
-        "test": ["pytest", 'pytest-xdist'],
+        "test": ["pytest", "pytest-xdist"],
         "notebooks": ["jupyter", "matplotlib", "descartes"],
     },
     tests_require=["dorchester[test]"],
