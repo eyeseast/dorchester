@@ -107,14 +107,36 @@ class GeoJSONWriter(Writer):
     def open(self):
         self.fd = open(self.path, self.mode)
 
+    def close(self, type, value, traceback):
+        self.fd.close()
+
     def write(self, point):
         feature = point.as_feature()
         data = geojson.dumps(feature) + "\n"
         self.fd.write(data)
 
+
+class NullWriter(Writer):
+    "A writer that writes nothing (for testing)"
+
+    def open(self):
+        return self
+
     def close(self, type, value, traceback):
-        self.fd.close()
+        pass
+
+    def write(self, point):
+        pass
+
+    def write_all(self, points):
+        pass
+
+    def write_error(self, error):
+        pass
+
+    def write_all_errors(self, errors):
+        pass
 
 
-FORMATS = {"csv": CSVWriter, "geojson": GeoJSONWriter}
+FORMATS = {"csv": CSVWriter, "geojson": GeoJSONWriter, "null": NullWriter}
 FILE_TYPES = {".csv": CSVWriter, ".json": GeoJSONWriter, ".geojson": GeoJSONWriter}
