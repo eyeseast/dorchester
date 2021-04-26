@@ -9,6 +9,7 @@ Supported types include:
  - SQLite
 """
 import csv
+import json
 import geojson
 from pathlib import Path
 
@@ -106,14 +107,20 @@ class GeoJSONWriter(Writer):
 
     def open(self):
         self.fd = open(self.path, self.mode)
+        self.error_fd = open(self.error_path, self.mode)
 
     def close(self, type, value, traceback):
         self.fd.close()
+        self.error_fd.close()
 
     def write(self, point):
         feature = point.as_feature()
         data = geojson.dumps(feature) + "\n"
         self.fd.write(data)
+
+    def write_error(self, error):
+        data = json.dumps(error._asdict()) + "\n"
+        self.error_fd.write(data)
 
 
 class NullWriter(Writer):
