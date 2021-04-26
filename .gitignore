@@ -11,6 +11,11 @@ build/
 dist/
 .vscode
 .mbtiles
-Makefile
-notebooks/
-tests/data/
+.ipynb_checkpoints
+
+scratch/
+
+tests/data/zip
+tests/data/shp
+tests/data/*.csv
+tests/data/*.profile

@@ -35,8 +35,16 @@ Options:
   -f, --format [csv|geojson]  Output format. If not given, will guess based on
                               output file extension.
 
-  -m, --mode [w|a|x]          File mode for destination.
-  --help                      Show this message and exit
+  -m, --mode [w|a|x]          File mode for destination  [default: w]
+  --fid TEXT                  Use a property key (instead of feature.id) to
+                              uniquely identify each feature
+
+  --coerce                    Coerce properties passed in --key to integers.
+                              BE CAREFUL. This could cause incorrect results
+                              if misused.
+
+  --progress                  Show a progress bar  [default: False]
+  --help                      Show this message and exit.
 ```
 
 Input can be in any format readable by [Fiona](https://fiona.readthedocs.io/en/stable/index.html), such as Shapefiles and GeoJSON. The input file needs to contain both population data and boundaries. You may need to join different files together before plotting with `dorchester`.
@@ -76,7 +84,7 @@ Each key (`--key`) should correspond to a property on each feature whose value i
 
 You can pass multiple `--key` options to create different groups that will be layered together. This is how you would create a map showing different racial groups, for example.
 
-Finally, the `--mode` option controls how the output file is opened:
+The `--mode` option controls how the output file is opened:
 
 - `w` will create or overwrite the output file
 - `a` will append to an existing file
@@ -87,6 +95,12 @@ Finally, the `--mode` option controls how the output file is opened:
 [Dorchester](https://en.wikipedia.org/wiki/Dorchester,_Boston) is the largest and most diverse neighborhood in Boston, Mass, and is often referred to as Dot.
 
 The name is also a nod to [Englewood](https://github.com/newsapps/englewood), built by the Chicago Tribune News Apps team. This is, hopefully, a worthy successor.
+
+Setting `--fid` will use a property key to identify each feature, instead of the feature's `id` field (which is often missing, or will be an index number in shapefiles). In the Census block example above, `BLOCKID10` will uniquely identify this block, while `id: 0` only identifies it as the first feature in its source shapefile.
+
+For data sources where properties are encoded as strings, the `--coerce` option will recast anything passed via `--key` to integers. Be careful with this option, as it involves changing data. It will fail (and stop plotting) if it encounters something that can't be coerced into an integer.
+
+Use the `--progress` flag to show a progress bar. This is off by default.
 
 ## Development
 

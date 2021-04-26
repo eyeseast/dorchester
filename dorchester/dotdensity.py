@@ -1,46 +1,12 @@
 """
 The functions in this module outline the main API for creating the data behind dot density maps.
 """
-import math
-import sys
-from itertools import chain
-from pathlib import Path
-
 import fiona
-from fiona.crs import from_epsg
-
-import geojson
 import numpy as np
 from shapely.geometry import shape
 from shapely.ops import triangulate
 
 from .point import Point, Error
-from .output import FILE_TYPES, FORMATS
-
-
-def plot(src, dest, keys, format=None, mode="w", fid_field=None, coerce=False):
-    """
-    Read from source, write to dest.
-    """
-    src = Path(src)
-    dest = Path(dest)
-
-    if format in FORMATS:
-        Writer = FORMATS[format]
-
-    else:
-        Writer = FILE_TYPES.get(dest.suffix, None)
-
-    if Writer is None:
-        raise TypeError(f"Unknown file type: {dest.name}")
-
-    with Writer(dest, mode) as writer:
-        for points, err in generate_points(
-            src, *keys, fid_field=fid_field, coerce=coerce
-        ):
-            writer.write_all(points)
-            if err.offset != 0:
-                writer.write_error(err)
 
 
 def generate_points(src, *keys, fid_field=None, coerce=False):
