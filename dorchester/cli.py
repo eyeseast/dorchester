@@ -63,7 +63,14 @@ def cli():
     show_default=True,
     help="Show a progress bar",
 )
-def plot(source, dest, keys, format, mode, fid_field, coerce, progress):
+@click.option(
+    "--fix",
+    type=click.BOOL,
+    is_flag=True,
+    default=False,
+    help="Fix rounding errors while generating points.",
+)
+def plot(source, dest, keys, format, mode, fid_field, coerce, progress, fix):
     """
     Generate data for a dot-density map. Input may be any GIS format readable by Fiona (Shapefile, GeoJSON, etc).
     """
@@ -80,7 +87,7 @@ def plot(source, dest, keys, format, mode, fid_field, coerce, progress):
         raise click.UsageError(f"Unknown file type: {dest.name}")
 
     generator = dotdensity.generate_points(
-        source, *keys, fid_field=fid_field, coerce=coerce
+        source, *keys, fid_field=fid_field, coerce=coerce, fix=fix
     )
     if progress:
         count = get_feature_count(source)

@@ -17,7 +17,7 @@ tests/data/suffolk.csv: tests/data/suffolk.geojson
 	time dorchester plot $^ $@ --key POP10 --progress
 
 profile: tests/data/suffolk.geojson
-	python -m cProfile -o tests/data/suffolk.profile -m dorchester.cli $^ /tmp/suffolk.csv --key POP10 --progress
+	time python -m cProfile -o tests/data/suffolk.profile -m dorchester.cli $^ /tmp/suffolk.csv --key POP10 --progress --fix
 
 null: tests/data/suffolk.geojson
 	time dorchester plot $^ /dev/null --key POP10 --progress --format null
