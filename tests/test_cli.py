@@ -153,6 +153,63 @@ def test_coerce_ints(tmpdir, source, feature_collection):
         assert (len(points) - offset) == cats
 
 
+def test_fix_errors(tmpdir, source, feature_collection):
+    dest = tmpdir / "output.csv"
+    errors = tmpdir / "output.errors.csv"
+    population = sum(f.properties["population"] for f in feature_collection.features)
+    runner = CliRunner()
+
+    with runner.isolated_filesystem():
+        result = runner.invoke(
+            cli, ["plot", str(source), str(dest), "--key", "population", "--fix"]
+        )
+
+        assert result.exit_code == 0
+        assert dest.exists()
+        assert errors.exists()
+
+        points = list(csv.DictReader(dest.open()))
+        offset = sum(int(row["offset"]) for row in csv.DictReader(errors.open()))
+
+        assert 0 == offset
+        assert len(points) == population
+
+
+def test_suffolk_county_fix(tmpdir):
+    dest = tmpdir / "suffolk.csv"
+    errors = tmpdir / "suffolk.errors.csv"
+    runner = CliRunner()
+
+    with fiona.open(SUFFOLK) as fc:
+        total_features = len(fc)
+        population = sum(f["properties"]["POP10"] for f in fc)
+
+    with runner.isolated_filesystem():
+        result = runner.invoke(
+            cli,
+            [
+                "plot",
+                str(SUFFOLK),
+                str(dest),
+                "--key",
+                "POP10",
+                "--fid",
+                "BLOCKID10",
+                "--fix",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert dest.exists()
+        assert errors.exists()
+
+        points = list(csv.DictReader(dest.open()))
+        offset = sum(int(row["offset"]) for row in csv.DictReader(errors.open()))
+
+        assert 0 == offset
+        assert len(points) == population
+
+
 def decode_json_newlines(file):
     for line in file:
         line = line.strip()

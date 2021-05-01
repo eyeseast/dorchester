@@ -1,6 +1,7 @@
 """
 The functions in this module outline the main API for creating the data behind dot density maps.
 """
+import itertools
 import fiona
 import numpy as np
 from shapely.geometry import shape
@@ -9,7 +10,7 @@ from shapely.ops import triangulate
 from .point import Point, Error
 
 
-def generate_points(src, *keys, fid_field=None, coerce=False):
+def generate_points(src, *keys, fid_field=None, coerce=False, fix=False):
     """
     Generate dot-density data, reading from source and yielding points.
     Any keys given will be used to extract population properties from features.
@@ -22,11 +23,11 @@ def generate_points(src, *keys, fid_field=None, coerce=False):
         for feature in source:
             for key in keys:
                 yield points_in_feature(
-                    feature, key, fid_field=fid_field, coerce=coerce
+                    feature, key, fid_field=fid_field, coerce=coerce, fix=fix
                 )
 
 
-def points_in_feature(feature, key, fid_field=None, coerce=False):
+def points_in_feature(feature, key, fid_field=None, coerce=False, fix=False):
     """
     Take a geojson *feature*, create a shape
     Get population from feature.properties using *key*
@@ -46,12 +47,12 @@ def points_in_feature(feature, key, fid_field=None, coerce=False):
         # let this fail if it fails
         population = int(population)
 
-    points, err = points_in_shape(geom, population)
+    points, err = points_in_shape(geom, population, fix)
     points = (Point(x, y, key, fid) for (x, y) in points)
     return points, Error(err, key, fid)
 
 
-def points_in_shape(geom, population):
+def points_in_shape(geom, population, fix=False):
     """
     plot n points randomly within a shapely geom
     first, cut the shape into triangles
@@ -61,7 +62,7 @@ def points_in_shape(geom, population):
      - a list of (x, y) coordinates
      - the error offset for this polygon-population combination
     """
-    triangles = (t for t in triangulate(geom) if t.within(geom))
+    triangles = [t for t in triangulate(geom) if t.within(geom)]
     points = []
     offset = -1 * population  # count up as we go
     for triangle in triangles:
@@ -72,7 +73,22 @@ def points_in_shape(geom, population):
         if n > 0:
             points.extend(points_on_triangle(vertices, n))
 
-    return points, offset
+    if not fix:
+        return points, offset
+
+    # too many points
+    if offset > 0:
+        return points[:-offset], 0
+
+    # not enough, cycle through triangles until we do
+    triangles = itertools.cycle(triangles)
+    while offset < 0:
+        triangle = next(triangles)
+        vertices = triangle.exterior.coords[:3]
+        points.extend(points_on_triangle(vertices, 1))
+        offset += 1
+
+    return points, 0
 
 
 # https://stackoverflow.com/questions/47410054/generate-random-locations-within-a-triangular-domain
