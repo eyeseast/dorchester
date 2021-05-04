@@ -71,7 +71,9 @@ def test_plot_total_points(source):
     points = list(itertools.chain(*points))
     total_err = sum(e.offset for e in errors)
 
-    assert (len(points) - total_err) == population
+    # because we're fixing now
+    assert 0 == total_err
+    assert (len(points)) == population
 
 
 def test_generate_points(source):
@@ -120,6 +122,10 @@ def test_multi_population(source, feature_collection):
     groups = {}
     for group, point_list in itertools.groupby(points, lambda p: p.group):
         groups[group] = list(point_list)
+
+    # errors fixed
+    assert errors["population"] == 0
+    assert errors["households"] == 0
 
     assert (
         (len(points) - errors["population"] - errors["households"])

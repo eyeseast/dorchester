@@ -10,7 +10,7 @@ from shapely.ops import triangulate
 from .point import Point, Error
 
 
-def generate_points(src, *keys, fid_field=None, coerce=False, fix=False):
+def generate_points(src, *keys, fid_field=None, coerce=False, fix=True):
     """
     Generate dot-density data, reading from source and yielding points.
     Any keys given will be used to extract population properties from features.
@@ -27,7 +27,7 @@ def generate_points(src, *keys, fid_field=None, coerce=False, fix=False):
                 )
 
 
-def points_in_feature(feature, key, fid_field=None, coerce=False, fix=False):
+def points_in_feature(feature, key, fid_field=None, coerce=False, fix=True):
     """
     Take a geojson *feature*, create a shape
     Get population from feature.properties using *key*
@@ -52,7 +52,7 @@ def points_in_feature(feature, key, fid_field=None, coerce=False, fix=False):
     return points, Error(err, key, fid)
 
 
-def points_in_shape(geom, population, fix=False):
+def points_in_shape(geom, population, fix=True):
     """
     plot n points randomly within a shapely geom
     first, cut the shape into triangles
