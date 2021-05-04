@@ -64,10 +64,9 @@ def cli():
     help="Show a progress bar",
 )
 @click.option(
-    "--fix",
-    type=click.BOOL,
+    "--fix/--no-fix",
     is_flag=True,
-    default=False,
+    default=True,
     help="Fix rounding errors while generating points.",
 )
 def plot(source, dest, keys, format, mode, fid_field, coerce, progress, fix):
