@@ -21,13 +21,12 @@ def generate_points(src, *keys, fid_field=None, coerce=False, fix=True):
     """
     with fiona.open(src) as source:
         for feature in source:
-            for key in keys:
-                yield points_in_feature(
-                    feature, key, fid_field=fid_field, coerce=coerce, fix=fix
-                )
+            yield points_in_feature(
+                feature, keys, fid_field=fid_field, coerce=coerce, fix=fix
+            )
 
 
-def points_in_feature(feature, key, fid_field=None, coerce=False, fix=True):
+def points_in_feature(feature, keys, fid_field=None, coerce=False, fix=True):
     """
     Take a geojson *feature*, create a shape
     Get population from feature.properties using *key*
@@ -42,14 +41,22 @@ def points_in_feature(feature, key, fid_field=None, coerce=False, fix=True):
         fid = feature.get("id")
 
     geom = shape(feature["geometry"])
-    population = feature["properties"].get(key) or 0  # handle missing or None
+    groups = {key: feature["properties"].get(key) or 0 for key in keys}
     if coerce:
-        # let this fail if it fails
-        population = int(population)
+        for key, population in groups.items():
+            groups[key] = int(population)
+
+    # get a total
+    population = sum(groups.values())
+    # population = feature["properties"].get(key) or 0  # handle missing or None
+    # if coerce:
+    # let this fail if it fails
+    #    population = int(population)
 
     points, err = points_in_shape(geom, population, fix)
-    points = (Point(x, y, key, fid) for (x, y) in points)
-    return points, Error(err, key, fid)
+    # points = (Point(x, y, key, fid) for (x, y) in points)
+    points = itertools.chain(*distribute_points(points, groups, fid))
+    return points, Error(err, "", fid)
 
 
 def points_in_shape(geom, population, fix=True):
@@ -89,6 +96,15 @@ def points_in_shape(geom, population, fix=True):
         offset += 1
 
     return points, 0
+
+
+def distribute_points(points, groups, fid):
+    "Allocate randomized points to population groups"
+    # ranges = {k: range(v) for k, v in groups.items()}
+    points = iter(points)
+    for key, population in groups.items():
+        chunk = itertools.islice(points, population)
+        yield [Point(x, y, key, fid) for x, y in chunk]
 
 
 # https://stackoverflow.com/questions/47410054/generate-random-locations-within-a-triangular-domain
