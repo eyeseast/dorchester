@@ -10,7 +10,7 @@ from shapely.ops import triangulate
 from .point import Point, Error
 
 
-def generate_points(src, *keys, fid_field=None, coerce=False, fix=True):
+def generate_points(src, *keys, fid_field=None, coerce=False):
     """
     Generate dot-density data, reading from source and yielding points.
     Any keys given will be used to extract population properties from features.
@@ -21,13 +21,10 @@ def generate_points(src, *keys, fid_field=None, coerce=False, fix=True):
     """
     with fiona.open(src) as source:
         for feature in source:
-            for key in keys:
-                yield points_in_feature(
-                    feature, key, fid_field=fid_field, coerce=coerce, fix=fix
-                )
+            yield points_in_feature(feature, keys, fid_field=fid_field, coerce=coerce)
 
 
-def points_in_feature(feature, key, fid_field=None, coerce=False, fix=True):
+def points_in_feature(feature, keys, fid_field=None, coerce=False):
     """
     Take a geojson *feature*, create a shape
     Get population from feature.properties using *key*
@@ -42,17 +39,21 @@ def points_in_feature(feature, key, fid_field=None, coerce=False, fix=True):
         fid = feature.get("id")
 
     geom = shape(feature["geometry"])
-    population = feature["properties"].get(key) or 0  # handle missing or None
+    groups = {key: feature["properties"].get(key) or 0 for key in keys}
     if coerce:
-        # let this fail if it fails
-        population = int(population)
+        for key, population in groups.items():
+            # let this fail if it fails
+            groups[key] = int(population)
 
-    points, err = points_in_shape(geom, population, fix)
-    points = (Point(x, y, key, fid) for (x, y) in points)
-    return points, Error(err, key, fid)
+    # get a total
+    population = sum(groups.values())
+
+    points, err = points_in_shape(geom, population)
+    points = distribute_points(points, groups, fid)
+    return points, Error(err, None, fid)
 
 
-def points_in_shape(geom, population, fix=True):
+def points_in_shape(geom, population):
     """
     plot n points randomly within a shapely geom
     first, cut the shape into triangles
@@ -73,9 +74,6 @@ def points_in_shape(geom, population, fix=True):
         if n > 0:
             points.extend(points_on_triangle(vertices, n))
 
-    if not fix:
-        return points, offset
-
     # too many points
     if offset > 0:
         return points[:-offset], 0
@@ -89,6 +87,14 @@ def points_in_shape(geom, population, fix=True):
         offset += 1
 
     return points, 0
+
+
+def distribute_points(points, groups, fid):
+    "Allocate randomized points to population groups"
+    points = iter(points)
+    for key, population in groups.items():
+        chunk = itertools.islice(points, population)
+        yield from (Point(x, y, key, fid) for x, y in chunk)
 
 
 # https://stackoverflow.com/questions/47410054/generate-random-locations-within-a-triangular-domain

@@ -45,7 +45,6 @@ Options:
                                   incorrect results if misused.
 
   --progress                      Show a progress bar  [default: False]
-  --fix                           Fix rounding errors while generating points.
   --help                          Show this message and exit.
 ```
 
@@ -97,12 +96,6 @@ Setting `--fid` will use a property key to identify each feature, instead of the
 For data sources where properties are encoded as strings, the `--coerce` option will recast anything passed via `--key` to integers. Be careful with this option, as it involves changing data. It will fail (and stop plotting) if it encounters something that can't be coerced into an integer.
 
 Use the `--progress` flag to show a progress bar. This is off by default.
-
-## Fix rounding errors
-
-The way points are plotted can sometimes introduce rounding errors. This is because each shape is cut into triangles, and points are distributed across those triangles according to the ratio of the triangle's area to the whole shape. Because we're always plotting whole numbers, we have to round, and sometimes that means we're off by one or two points (or more, for large populations in complex shapes).
-
-Passing the `--fix` flag will fix those errors during plotting. This slows things down a tiny bit, but it's probably worth using most of the time.
 
 ## Putting points on a map
 
