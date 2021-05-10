@@ -3,6 +3,7 @@ import itertools
 
 import geojson
 import pytest
+import numpy as np
 from shapely import geometry
 from shapely.ops import triangulate
 
@@ -113,38 +114,19 @@ def test_multi_population(source, feature_collection):
     ratio = households / population
 
     points = []
-    errors = {"population": 0, "households": 0}
-
     for p, err in dotdensity.generate_points(source, "population", "households"):
         points.extend(p)
-        errors[err.group] += err.offset
 
-    groups = {}
-    for group, point_list in itertools.groupby(points, lambda p: p.group):
-        groups[group] = list(point_list)
+    groups = regroup(points, lambda p: p.group)
 
-    # errors fixed
-    assert errors["population"] == 0
-    assert errors["households"] == 0
-
-    assert (
-        (len(points) - errors["population"] - errors["households"])
-    ) == population + households
-
-    assert (
-        len([p for p in points if p.group == "population"]) - errors["population"]
-        == population
-    )
-
-    assert (
-        len([p for p in points if p.group == "households"]) - errors["households"]
-        == households
-    )
+    assert (len(points)) == population + households
+    assert len([p for p in points if p.group == "population"]) == population
+    assert len([p for p in points if p.group == "households"]) == households
 
 
 def test_custom_fid():
     f = feature(None, 5, geoid="01", population=100)
-    points, err = dotdensity.points_in_feature(f, "population", fid_field="geoid")
+    points, err = dotdensity.points_in_feature(f, ["population"], fid_field="geoid")
 
     assert "01" == err.fid
     for point in points:
@@ -153,17 +135,37 @@ def test_custom_fid():
 
 def test_coerce_to_int():
     f = feature(None, 5, geoid="01", population="100")
-    points, err = dotdensity.points_in_feature(f, "population", coerce=True)
+    points, err = dotdensity.points_in_feature(f, ["population"], coerce=True)
 
-    assert 100 == (len(list(points)) - err.offset)
+    assert 100 == len(list(points))
+
+
+def test_distribute_points():
+    groups = {"red": 44, "blue": 33, "green": 23}
+    points = dotdensity.distribute_points(np.random.rand(100, 2), groups, 0)
+    points = sorted(points, key=lambda p: p.group)
+
+    assert len(points) == sum(groups.values())
+
+    for key, group in itertools.groupby(points, lambda p: p.group):
+        group = list(group)
+        assert len(group) == groups[key]
 
 
 def test_missing_field():
     f = feature(1, 5, population=100, cats=None)
-    points, err = dotdensity.points_in_feature(f, "households", coerce=True)
+    points, err = dotdensity.points_in_feature(f, ["households"], coerce=True)
     points = list(points)
     assert len(points) == 0
 
-    points, err = dotdensity.points_in_feature(f, "cats", coerce=True)
+    points, err = dotdensity.points_in_feature(f, ["cats"], coerce=True)
 
     assert len(list(points)) == 0
+
+
+def regroup(iterable, key):
+    groups = {}
+    iterable = sorted(iterable, key=key)
+    for key, group in itertools.groupby(iterable, key):
+        groups[key] = list(group)
+    return groups

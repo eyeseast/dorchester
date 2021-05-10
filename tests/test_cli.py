@@ -18,41 +18,6 @@ def test_version():
         assert result.output.startswith("cli, version ")
 
 
-def test_suffolk_nofix(tmpdir):
-    dest = tmpdir / "suffolk.csv"
-    errors = tmpdir / "suffolk.errors.csv"
-    runner = CliRunner()
-
-    with fiona.open(SUFFOLK) as fc:
-        total_features = len(fc)
-        population = sum(f["properties"]["POP10"] for f in fc)
-
-    with runner.isolated_filesystem():
-        result = runner.invoke(
-            cli,
-            [
-                "plot",
-                str(SUFFOLK),
-                str(dest),
-                "--key",
-                "POP10",
-                "--fid",
-                "BLOCKID10",
-                "--no-fix",
-            ],
-        )
-
-        assert result.exit_code == 0
-        assert dest.exists()
-        assert errors.exists()
-
-        points = list(csv.DictReader(dest.open()))
-        offset = sum(int(row["offset"]) for row in csv.DictReader(errors.open()))
-
-        assert -3669 == offset
-        assert (len(points) - offset) == population
-
-
 def test_plot(tmpdir, source, feature_collection):
     dest = tmpdir / "output.csv"
     errors = tmpdir / "output.errors.csv"
@@ -94,26 +59,6 @@ def test_plot_geojson(tmpdir, source, feature_collection):
         offset = sum(int(row["offset"]) for row in decode_json_newlines(errors.open()))
 
         assert (len(points) - offset) == population
-
-
-def test_no_zeroes(tmpdir, source):
-    dest = tmpdir / "output.csv"
-    errors = tmpdir / "output.errors.csv"
-    runner = CliRunner()
-
-    with runner.isolated_filesystem():
-        result = runner.invoke(
-            cli, ["plot", str(source), str(dest), "--key", "population", "--no-fix"]
-        )
-
-        assert result.exit_code == 0
-        assert dest.exists()
-        assert errors.exists()
-
-        offsets = [int(row["offset"]) for row in csv.DictReader(errors.open())]
-        zeroes = [i for i in offsets if i == 0]
-
-        assert len(zeroes) == 0
 
 
 def test_custom_fid(tmpdir, source, feature_collection):
@@ -186,7 +131,7 @@ def test_fix_errors(tmpdir, source, feature_collection):
         assert len(points) == population
 
 
-def test_suffolk_county_fix(tmpdir):
+def test_suffolk_county(tmpdir):
     dest = tmpdir / "suffolk.csv"
     errors = tmpdir / "suffolk.errors.csv"
     runner = CliRunner()
@@ -206,7 +151,6 @@ def test_suffolk_county_fix(tmpdir):
                 "POP10",
                 "--fid",
                 "BLOCKID10",
-                "--fix",
             ],
         )
 

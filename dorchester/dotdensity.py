@@ -55,8 +55,8 @@ def points_in_feature(feature, keys, fid_field=None, coerce=False, fix=True):
 
     points, err = points_in_shape(geom, population, fix)
     # points = (Point(x, y, key, fid) for (x, y) in points)
-    points = itertools.chain(*distribute_points(points, groups, fid))
-    return points, Error(err, "", fid)
+    points = distribute_points(points, groups, fid)
+    return points, Error(err, None, fid)
 
 
 def points_in_shape(geom, population, fix=True):
@@ -104,7 +104,7 @@ def distribute_points(points, groups, fid):
     points = iter(points)
     for key, population in groups.items():
         chunk = itertools.islice(points, population)
-        yield [Point(x, y, key, fid) for x, y in chunk]
+        yield from (Point(x, y, key, fid) for x, y in chunk)
 
 
 # https://stackoverflow.com/questions/47410054/generate-random-locations-within-a-triangular-domain
