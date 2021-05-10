@@ -104,9 +104,8 @@ def test_coerce_ints(tmpdir, source, feature_collection):
         assert errors.exists()
 
         points = list(csv.DictReader(dest.open()))
-        offset = sum(int(row["offset"]) for row in csv.DictReader(errors.open()))
 
-        assert (len(points) - offset) == cats
+        assert len(points) == cats
 
 
 def test_fix_errors(tmpdir, source, feature_collection):
@@ -117,7 +116,7 @@ def test_fix_errors(tmpdir, source, feature_collection):
 
     with runner.isolated_filesystem():
         result = runner.invoke(
-            cli, ["plot", str(source), str(dest), "--key", "population", "--fix"]
+            cli, ["plot", str(source), str(dest), "--key", "population"]
         )
 
         assert result.exit_code == 0
