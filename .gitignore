@@ -19,3 +19,6 @@ tests/data/zip
 tests/data/shp
 tests/data/*.csv
 tests/data/*.profile
+
+*.mbtiles
+*.*-journal
