@@ -2,6 +2,8 @@
 The functions in this module outline the main API for creating the data behind dot density maps.
 """
 import itertools
+import random
+
 import fiona
 import numpy as np
 from shapely.geometry import shape
@@ -49,7 +51,7 @@ def points_in_feature(feature, keys, fid_field=None, coerce=False):
     population = sum(groups.values())
 
     points, err = points_in_shape(geom, population)
-    points = distribute_points(points, groups, fid)
+    points = list(distribute_points(points, groups, fid))
     return points, Error(err, None, fid)
 
 
@@ -91,6 +93,10 @@ def points_in_shape(geom, population):
 
 def distribute_points(points, groups, fid):
     "Allocate randomized points to population groups"
+    if len(groups) > 1:
+        # don't bother shuffling if there's only one key
+        random.shuffle(points)
+
     points = iter(points)
     for key, population in groups.items():
         chunk = itertools.islice(points, population)
