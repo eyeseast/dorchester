@@ -54,9 +54,9 @@ def test_points_in_shape():
     population = f.properties["population"]
     geom = geometry.shape(f.geometry)
 
-    points, err = dotdensity.points_in_shape(geom, population)
+    points = dotdensity.points_in_shape(geom, population)
 
-    assert len(points) - err == population
+    assert len(points) == population
 
 
 def test_plot_total_points(source):
@@ -64,29 +64,24 @@ def test_plot_total_points(source):
     fc = geojson.loads(source.read_text())
     population = sum(f.properties["population"] for f in fc.features)
 
-    # sanity checks
+    # starting line check
     assert 10 == len(fc.features)
     assert 1000 == population
 
-    points, errors = zip(*dotdensity.generate_points(source, "population"))
+    points = dotdensity.generate_points(source, "population")
     points = list(itertools.chain(*points))
-    total_err = sum(e.offset for e in errors)
 
-    # because we're fixing now
-    assert 0 == total_err
-    assert (len(points)) == population
+    assert len(points) == population
 
 
 def test_generate_points(source):
     "Check that we return the right data structure"
     gen = dotdensity.generate_points(source, "population")
 
-    points, err = next(gen)
+    points = next(gen)
     points = list(points)
     point = points[0]
 
-    assert isinstance(err, Error)
-    assert isinstance(err.offset, int)
     assert isinstance(point, dotdensity.Point)
     assert isinstance(point.x, float)
     assert isinstance(point.y, float)
@@ -101,7 +96,7 @@ def test_points_in_polygons(source):
 
     # group points by fid, check that each is within the corresponding polygon
     features = {f.id: f for f in fc.features}
-    for points, err in dotdensity.generate_points(source, "population"):
+    for points in dotdensity.generate_points(source, "population"):
         for point in points:
             feature = features[int(point.fid)]
             geom = geometry.shape(feature.geometry)
@@ -113,29 +108,28 @@ def test_multi_population(source, feature_collection):
     households = sum(f.properties["households"] for f in feature_collection.features)
     ratio = households / population
 
-    points = []
-    for p, err in dotdensity.generate_points(source, "population", "households"):
-        points.extend(p)
+    points = list(
+        itertools.chain(*dotdensity.generate_points(source, "population", "households"))
+    )
 
     groups = regroup(points, lambda p: p.group)
 
-    assert (len(points)) == population + households
-    assert len([p for p in points if p.group == "population"]) == population
-    assert len([p for p in points if p.group == "households"]) == households
+    assert len(points) == population + households
+    assert len(groups["population"]) == population
+    assert len(groups["households"]) == households
 
 
 def test_custom_fid():
     f = feature(None, 5, geoid="01", population=100)
-    points, err = dotdensity.points_in_feature(f, ["population"], fid_field="geoid")
+    points = dotdensity.points_in_feature(f, ["population"], fid_field="geoid")
 
-    assert "01" == err.fid
     for point in points:
         assert "01" == point.fid
 
 
 def test_coerce_to_int():
     f = feature(None, 5, geoid="01", population="100")
-    points, err = dotdensity.points_in_feature(f, ["population"], coerce=True)
+    points = dotdensity.points_in_feature(f, ["population"], coerce=True)
 
     assert 100 == len(list(points))
 
@@ -154,11 +148,11 @@ def test_distribute_points():
 
 def test_missing_field():
     f = feature(1, 5, population=100, cats=None)
-    points, err = dotdensity.points_in_feature(f, ["households"], coerce=True)
+    points = dotdensity.points_in_feature(f, ["households"], coerce=True)
     points = list(points)
     assert len(points) == 0
 
-    points, err = dotdensity.points_in_feature(f, ["cats"], coerce=True)
+    points = dotdensity.points_in_feature(f, ["cats"], coerce=True)
 
     assert len(list(points)) == 0
 

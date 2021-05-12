@@ -87,10 +87,8 @@ def plot(source, dest, keys, format, mode, fid_field, coerce, progress):
         generator = tqdm(generator, total=count, unit="features")
 
     with Writer(dest, mode) as writer:
-        for points, err in generator:
+        for points in generator:
             writer.write_all(points)
-            if err.offset != 0:
-                writer.write_error(err)
 
 
 # for progress bars

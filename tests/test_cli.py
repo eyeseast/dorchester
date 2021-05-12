@@ -20,7 +20,6 @@ def test_version():
 
 def test_plot(tmpdir, source, feature_collection):
     dest = tmpdir / "output.csv"
-    errors = tmpdir / "output.errors.csv"
     population = sum(f.properties["population"] for f in feature_collection.features)
     runner = CliRunner()
 
@@ -31,18 +30,14 @@ def test_plot(tmpdir, source, feature_collection):
 
         assert result.exit_code == 0
         assert dest.exists()
-        assert errors.exists()
 
         points = list(csv.DictReader(dest.open()))
-        offset = sum(int(row["offset"]) for row in csv.DictReader(errors.open()))
 
-        assert 0 == offset
-        assert (len(points) - offset) == population
+        assert len(points) == population
 
 
 def test_plot_geojson(tmpdir, source, feature_collection):
     dest = tmpdir / "output.json"
-    errors = tmpdir / "output.errors.json"
     population = sum(f.properties["population"] for f in feature_collection.features)
     runner = CliRunner()
 
@@ -53,17 +48,14 @@ def test_plot_geojson(tmpdir, source, feature_collection):
 
         assert result.exit_code == 0
         assert dest.exists()
-        assert errors.exists()
 
         points = list(decode_json_newlines(dest.open()))
-        offset = sum(int(row["offset"]) for row in decode_json_newlines(errors.open()))
 
-        assert (len(points) - offset) == population
+        assert len(points) == population
 
 
 def test_custom_fid(tmpdir, source, feature_collection):
     dest = tmpdir / "output.csv"
-    errors = tmpdir / "output.errors.csv"
     runner = CliRunner()
 
     with runner.isolated_filesystem():
@@ -74,7 +66,6 @@ def test_custom_fid(tmpdir, source, feature_collection):
 
         assert result.exit_code == 0
         assert dest.exists()
-        assert errors.exists()
 
     reader = csv.DictReader(dest.open())
     reader = sorted(reader, key=lambda row: row["fid"])
@@ -89,7 +80,6 @@ def test_custom_fid(tmpdir, source, feature_collection):
 
 def test_coerce_ints(tmpdir, source, feature_collection):
     dest = tmpdir / "output.csv"
-    errors = tmpdir / "output.errors.csv"
     cats = sum(int(f.properties["cats"]) for f in feature_collection.features)
     runner = CliRunner()
 
@@ -101,38 +91,14 @@ def test_coerce_ints(tmpdir, source, feature_collection):
 
         assert result.exit_code == 0
         assert dest.exists()
-        assert errors.exists()
 
         points = list(csv.DictReader(dest.open()))
 
         assert len(points) == cats
 
 
-def test_fix_errors(tmpdir, source, feature_collection):
-    dest = tmpdir / "output.csv"
-    errors = tmpdir / "output.errors.csv"
-    population = sum(f.properties["population"] for f in feature_collection.features)
-    runner = CliRunner()
-
-    with runner.isolated_filesystem():
-        result = runner.invoke(
-            cli, ["plot", str(source), str(dest), "--key", "population"]
-        )
-
-        assert result.exit_code == 0
-        assert dest.exists()
-        assert errors.exists()
-
-        points = list(csv.DictReader(dest.open()))
-        offset = sum(int(row["offset"]) for row in csv.DictReader(errors.open()))
-
-        assert 0 == offset
-        assert len(points) == population
-
-
 def test_suffolk_county(tmpdir):
     dest = tmpdir / "suffolk.csv"
-    errors = tmpdir / "suffolk.errors.csv"
     runner = CliRunner()
 
     with fiona.open(SUFFOLK) as fc:
@@ -155,16 +121,12 @@ def test_suffolk_county(tmpdir):
 
         assert result.exit_code == 0
         assert dest.exists()
-        assert errors.exists()
 
         points = list(csv.DictReader(dest.open()))
-        offset = sum(int(row["offset"]) for row in csv.DictReader(errors.open()))
 
-        assert 0 == offset
         assert len(points) == population
 
 
 def decode_json_newlines(file):
     for line in file:
-        line = line.strip()
-        yield json.loads(line)
+        yield json.loads(line.strip())

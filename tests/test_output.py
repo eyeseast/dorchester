@@ -70,31 +70,3 @@ def test_write_geojson(points, tmpdir):
         assert [point.x, point.y] == feature.geometry.coordinates
         assert point.group == feature.properties["group"]
         assert point.fid == feature.properties["fid"]
-
-
-def test_error_path():
-    writer = CSVWriter("points.csv")
-    assert isinstance(writer.error_path, pathlib.Path)
-    assert str(writer.error_path) == "points.errors.csv"
-
-
-def test_write_errors(tmpdir, source):
-    path = tmpdir / "points.csv"
-    error_path = tmpdir / "points.errors.csv"
-
-    points = []
-    errors = []
-
-    with CSVWriter(path) as writer:
-        for p, error in dotdensity.generate_points(source, "population"):
-            p_list = list(p)
-            points.extend(p_list)
-            errors.append(error)
-            writer.write_all(p_list)
-            writer.write_error(error)
-
-    written_points = list(csv.DictReader(path.open()))
-    written_errors = list(csv.DictReader(error_path.open()))
-
-    assert len(points) == len(written_points)
-    assert len(errors) == len(written_errors)
