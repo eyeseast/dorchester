@@ -29,8 +29,19 @@ tests/data/suffolk-race.csv: tests/data/suffolk-2010-race.geojson
 tests/data/suffolk-2010-race.mbtiles: tests/data/suffolk-race.csv
 	tippecanoe -zg -o $@ --drop-densest-as-needed --extend-zooms-if-still-dropping $^
 
-profile: tests/data/suffolk.geojson
-	time python -m cProfile -o tests/data/suffolk.profile -m dorchester.cli $^ /tmp/suffolk.csv --key POP10 --progress --fix
+profile: tests/data/suffolk-2010-race.geojson
+	time python -m cProfile -o tests/data/suffolk.profile -m dorchester.cli $^ /tmp/suffolk.csv \
+	  --progress \
+	  -k White \
+	  -k "Black or African American" \
+	  -k "American Indian and Alaska Native" \
+	  -k "Asian" \
+	  -k "Native Hawaiian and Other Pacific Islander" \
+	  -k Other \
+	  -k "Two or More Races"
+
+test:
+	pytest -n 4 -v
 
 null: tests/data/suffolk.geojson
 	time dorchester plot $^ /dev/null --key POP10 --progress --format null

@@ -17,9 +17,7 @@ def generate_points(src, *keys, fid_field=None, coerce=False):
     Generate dot-density data, reading from source and yielding points.
     Any keys given will be used to extract population properties from features.
 
-    For each feature, yield a two-tuple of:
-     - a list of Point objects
-     - the error offset for this polygon-population combination
+    For each feature, yield a generator of Point objects
     """
     with fiona.open(src) as source:
         for feature in source:
@@ -31,9 +29,7 @@ def points_in_feature(feature, keys, fid_field=None, coerce=False):
     Take a geojson *feature*, create a shape
     Get population from feature.properties using *key*
     Concatenate all points yielded from points_in_shape
-    return a two-tuple of:
-     - a list of Point objects
-     - the error tuple, containing an offset, group name and feature id
+    return a list of Point objects
     """
     if fid_field is not None:
         fid = feature["properties"].get(fid_field)
@@ -50,9 +46,8 @@ def points_in_feature(feature, keys, fid_field=None, coerce=False):
     # get a total
     population = sum(groups.values())
 
-    points, err = points_in_shape(geom, population)
-    points = list(distribute_points(points, groups, fid))
-    return points, Error(err, None, fid)
+    points = points_in_shape(geom, population)
+    return distribute_points(points, groups, fid)
 
 
 def points_in_shape(geom, population):
@@ -61,9 +56,7 @@ def points_in_shape(geom, population):
     first, cut the shape into triangles
     then, give each triangle a portion of points based on relative area
     within each triangle, distribute points using a weighted average
-    return a two-tuple of:
-     - a list of (x, y) coordinates
-     - the error offset for this polygon-population combination
+    return a list of (x, y) coordinates
     """
     triangles = [t for t in triangulate(geom) if t.within(geom)]
     points = []
@@ -78,7 +71,7 @@ def points_in_shape(geom, population):
 
     # too many points
     if offset > 0:
-        return points[:-offset], 0
+        return points[:-offset]
 
     # not enough, cycle through triangles until we do
     triangles = itertools.cycle(triangles)
@@ -88,7 +81,7 @@ def points_in_shape(geom, population):
         points.extend(points_on_triangle(vertices, 1))
         offset += 1
 
-    return points, 0
+    return points
 
 
 def distribute_points(points, groups, fid):
