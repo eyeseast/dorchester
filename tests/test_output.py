@@ -5,7 +5,7 @@ import geojson
 import pytest
 
 from dorchester import dotdensity
-from dorchester.point import Point, Error
+from dorchester.point import Point
 from dorchester.output import CSVWriter, GeoJSONWriter
 
 

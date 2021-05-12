@@ -7,7 +7,7 @@ import numpy as np
 from shapely import geometry
 from shapely.ops import triangulate
 
-from dorchester.point import Point, Error
+from dorchester.point import Point
 from dorchester import dotdensity
 from conftest import feature
 

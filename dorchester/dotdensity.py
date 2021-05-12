@@ -9,7 +9,7 @@ import numpy as np
 from shapely.geometry import shape
 from shapely.ops import triangulate
 
-from .point import Point, Error
+from .point import Point
 
 
 def generate_points(src, *keys, fid_field=None, coerce=False):
