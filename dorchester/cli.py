@@ -63,7 +63,15 @@ def cli():
     show_default=True,
     help="Show a progress bar",
 )
-def plot(source, dest, keys, format, mode, fid_field, coerce, progress):
+@click.option(
+    "-m",
+    "--multiprocessing",
+    "mp",
+    is_flag=True,
+    default=False,
+    help="Use multiprocessing",
+)
+def plot(source, dest, keys, format, mode, fid_field, coerce, progress, mp):
     """
     Generate data for a dot-density map. Input may be any GIS format readable by Fiona (Shapefile, GeoJSON, etc).
     """
@@ -79,9 +87,12 @@ def plot(source, dest, keys, format, mode, fid_field, coerce, progress):
     if Writer is None:
         raise click.UsageError(f"Unknown file type: {dest.name}")
 
-    generator = dotdensity.generate_points(
-        source, *keys, fid_field=fid_field, coerce=coerce
-    )
+    if mp:
+        generate_points = dotdensity.generate_points_mp
+    else:
+        generate_points = dotdensity.generate_points
+
+    generator = generate_points(source, *keys, fid_field=fid_field, coerce=coerce)
     if progress:
         count = get_feature_count(source)
         generator = tqdm(generator, total=count, unit="features")

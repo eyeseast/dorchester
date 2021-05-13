@@ -127,6 +127,37 @@ def test_suffolk_county(tmpdir):
         assert len(points) == population
 
 
+def test_suffolk_county_mp(tmpdir):
+    dest = tmpdir / "suffolk.csv"
+    runner = CliRunner()
+
+    with fiona.open(SUFFOLK) as fc:
+        total_features = len(fc)
+        population = sum(f["properties"]["POP10"] for f in fc)
+
+    with runner.isolated_filesystem():
+        result = runner.invoke(
+            cli,
+            [
+                "plot",
+                str(SUFFOLK),
+                str(dest),
+                "--key",
+                "POP10",
+                "--fid",
+                "BLOCKID10",
+                "--multiprocessing",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert dest.exists()
+
+        points = list(csv.DictReader(dest.open()))
+
+        assert len(points) == population
+
+
 def decode_json_newlines(file):
     for line in file:
         yield json.loads(line.strip())

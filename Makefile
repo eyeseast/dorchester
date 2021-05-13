@@ -17,7 +17,7 @@ tests/data/suffolk.csv: tests/data/suffolk.geojson
 	time dorchester plot $^ $@ --key POP10 --progress
 
 tests/data/suffolk-race.csv: tests/data/suffolk-2010-race.geojson
-	time dorchester plot $^ $@ --progress \
+	time dorchester plot $^ $@ --progress -m \
 	  -k White \
 	  -k "Black or African American" \
 	  -k "American Indian and Alaska Native" \
