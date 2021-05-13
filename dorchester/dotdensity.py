@@ -2,7 +2,9 @@
 The functions in this module outline the main API for creating the data behind dot density maps.
 """
 import itertools
+import multiprocessing
 import random
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import fiona
 import numpy as np
@@ -22,6 +24,19 @@ def generate_points(src, *keys, fid_field=None, coerce=False):
     with fiona.open(src) as source:
         for feature in source:
             yield points_in_feature(feature, keys, fid_field=fid_field, coerce=coerce)
+
+
+def generate_points_mp(src, *keys, fid_field=None, coerce=False):
+    with fiona.open(src) as source, ProcessPoolExecutor() as pool:
+        futures = []
+        for feature in source:
+            f = pool.submit(
+                points_in_feature, feature, keys, fid_field=fid_field, coerce=coerce
+            )
+            futures.append(f)
+
+        for future in as_completed(futures):
+            yield future.result()
 
 
 def points_in_feature(feature, keys, fid_field=None, coerce=False):
@@ -47,7 +62,7 @@ def points_in_feature(feature, keys, fid_field=None, coerce=False):
     population = sum(groups.values())
 
     points = points_in_shape(geom, population)
-    return distribute_points(points, groups, fid)
+    return list(distribute_points(points, groups, fid))
 
 
 def points_in_shape(geom, population):

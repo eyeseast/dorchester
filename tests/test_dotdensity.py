@@ -90,6 +90,21 @@ def test_generate_points(source):
     assert "0" == point.fid
 
 
+def test_generate_points_mp(source):
+    "Check that we return the right data structure with multiprocessing"
+    gen = dotdensity.generate_points_mp(source, "population")
+
+    points = next(gen)
+    # points = list(points)
+    point = points[0]
+
+    assert isinstance(point, dotdensity.Point)
+    assert isinstance(point.x, float)
+    assert isinstance(point.y, float)
+
+    assert "population" == point.group
+
+
 def test_points_in_polygons(source):
     "Check that all points are in the correct polygons"
     fc = geojson.loads(source.read_text())
