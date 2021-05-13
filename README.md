@@ -45,6 +45,7 @@ Options:
                                   incorrect results if misused.
 
   --progress                      Show a progress bar  [default: False]
+  -m, --multiprocessing           Use multiprocessing
   --help                          Show this message and exit.
 ```
 
@@ -97,11 +98,13 @@ For data sources where properties are encoded as strings, the `--coerce` option 
 
 Use the `--progress` flag to show a progress bar. This is off by default.
 
+Use `-m` or `--multiprocessing` to use Python's [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) module to significantly speed up point generation. This will try to use every processor on your machine instead of just one.
+
 ## Putting points on a map
 
 For small-ish areas, QGIS will render lots of points just fine. Generate points, and load the output as a delimited or GeoJSON file.
 
-To build an interactive dot density map, you can use tippecanoe to generate an MBTiles file, which can be uploaded to Mapbox (or possibly other hosting providers). This has worked for me:
+To build an interactive dot density map, you can use [tippecanoe](https://github.com/mapbox/tippecanoe) to generate an MBTiles file, which can be uploaded to Mapbox (or possibly other hosting providers). This has worked for me:
 
 ```sh
 tippecanoe -zg -o points.mbtiles --drop-densest-as-needed --extend-zooms-if-still-dropping points.csv
