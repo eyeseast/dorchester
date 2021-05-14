@@ -64,10 +64,6 @@ def test_plot_total_points(source):
     fc = geojson.loads(source.read_text())
     population = sum(f.properties["population"] for f in fc.features)
 
-    # starting line check
-    assert 10 == len(fc.features)
-    assert 1000 == population
-
     points = dotdensity.generate_points(source, "population")
     points = list(itertools.chain(*points))
 
