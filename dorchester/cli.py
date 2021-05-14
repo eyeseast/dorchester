@@ -94,10 +94,14 @@ def plot(source, dest, keys, format, mode, fid_field, coerce, progress, mp):
 
     generator = generate_points(source, *keys, fid_field=fid_field, coerce=coerce)
     if progress:
+        click.echo(f"Counting features in {source}")
         count = get_feature_count(source)
+        click.echo(f"{count} features")
         generator = tqdm(generator, total=count, unit="features")
 
     with Writer(dest, mode) as writer:
+        if not progress:
+            click.echo("Generating points ...")
         for points in generator:
             writer.write_all(points)
 

@@ -32,6 +32,7 @@ tests/data/suffolk-2010-race.mbtiles: tests/data/suffolk-race.csv
 profile: tests/data/suffolk-2010-race.geojson
 	time python -m cProfile -o tests/data/suffolk.profile -m dorchester.cli $^ /tmp/suffolk.csv \
 	  --progress \
+	  --multiprocessing \
 	  -k White \
 	  -k "Black or African American" \
 	  -k "American Indian and Alaska Native" \
