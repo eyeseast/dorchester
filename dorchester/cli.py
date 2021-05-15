@@ -64,6 +64,12 @@ def cli():
     help="Show a progress bar",
 )
 @click.option(
+    "-c",
+    "--count",
+    type=click.INT,
+    help="Feature count, used with progress bar.",
+)
+@click.option(
     "-m",
     "--multiprocessing",
     "mp",
@@ -71,7 +77,7 @@ def cli():
     default=False,
     help="Use multiprocessing",
 )
-def plot(source, dest, keys, format, mode, fid_field, coerce, progress, mp):
+def plot(source, dest, keys, format, mode, fid_field, coerce, progress, count, mp):
     """
     Generate data for a dot-density map. Input may be any GIS format readable by Fiona (Shapefile, GeoJSON, etc).
     """
@@ -94,8 +100,7 @@ def plot(source, dest, keys, format, mode, fid_field, coerce, progress, mp):
 
     generator = generate_points(source, *keys, fid_field=fid_field, coerce=coerce)
     if progress:
-        click.echo(f"Counting features in {source}")
-        count = get_feature_count(source)
+        count = count or get_feature_count(source)
         click.echo(f"{count} features")
         generator = tqdm(generator, total=count, unit="features")
 
@@ -108,6 +113,7 @@ def plot(source, dest, keys, format, mode, fid_field, coerce, progress, mp):
 
 # for progress bars
 def get_feature_count(source):
+    click.echo(f"Counting features in {source}")
     with fiona.open(source) as fc:
         return len(fc)
 

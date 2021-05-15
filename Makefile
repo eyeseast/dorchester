@@ -18,6 +18,7 @@ tests/data/suffolk.csv: tests/data/suffolk.geojson
 
 tests/data/suffolk-race.csv: tests/data/suffolk-2010-race.geojson
 	time dorchester plot $^ $@ --progress -m \
+	  --count 5662 \
 	  -k White \
 	  -k "Black or African American" \
 	  -k "American Indian and Alaska Native" \
