@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import click
@@ -7,7 +8,10 @@ from click_default_group import DefaultGroup
 from tqdm import tqdm
 
 from . import dotdensity
+from .dotdensity import get_feature_id
 from .output import FILE_TYPES, FORMATS
+
+log = logging.getLogger("dorchester")
 
 
 @click.group(cls=DefaultGroup, default="plot")
@@ -77,10 +81,22 @@ def cli():
     default=False,
     help="Use multiprocessing",
 )
-def plot(source, dest, keys, format, mode, fid_field, coerce, progress, count, mp):
+@click.option("--log", "logfile", type=click.Path(dir_okay=False))
+def plot(
+    source, dest, keys, format, mode, fid_field, coerce, progress, count, mp, logfile
+):
     """
     Generate data for a dot-density map. Input may be any GIS format readable by Fiona (Shapefile, GeoJSON, etc).
     """
+    if logfile:
+        handler = logging.FileHandler(logfile, "w", "utf-8")
+        handler.setLevel(logging.DEBUG)
+
+        formatter = logging.Formatter("%(asctime)s: %(message)s")
+        handler.setFormatter(formatter)
+        log.addHandler(handler)
+        log.setLevel(logging.DEBUG)
+
     source = Path(source)
     dest = Path(dest)
 
@@ -104,6 +120,7 @@ def plot(source, dest, keys, format, mode, fid_field, coerce, progress, count, m
         click.echo(f"{count} features")
         generator = tqdm(generator, total=count, unit="features")
 
+    log.debug(f"Source: {source}")
     with Writer(dest, mode) as writer:
         if not progress:
             click.echo("Generating points ...")

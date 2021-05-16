@@ -22,3 +22,4 @@ tests/data/*.profile
 
 *.mbtiles
 *.*-journal
+*.log

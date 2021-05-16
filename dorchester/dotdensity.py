@@ -2,6 +2,7 @@
 The functions in this module outline the main API for creating the data behind dot density maps.
 """
 import itertools
+import logging
 import multiprocessing
 import random
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -13,6 +14,8 @@ from shapely.ops import triangulate
 
 from .point import Point
 
+log = logging.getLogger("dorchester")
+
 
 def generate_points(src, *keys, fid_field=None, coerce=False):
     """
@@ -21,8 +24,10 @@ def generate_points(src, *keys, fid_field=None, coerce=False):
 
     For each feature, yield a generator of Point objects
     """
+
     with fiona.open(src) as source:
         for feature in source:
+            log.debug(f"Feature: {get_feature_id(feature, fid_field)}")
             yield points_in_feature(feature, keys, fid_field=fid_field, coerce=coerce)
 
 
@@ -36,6 +41,7 @@ def generate_points_mp(src, *keys, fid_field=None, coerce=False):
             futures.append(f)
 
         for future in as_completed(futures):
+            log.debug(f"Finished feature: {get_feature_id(feature, fid_field)}")
             yield future.result()
 
 
@@ -46,10 +52,7 @@ def points_in_feature(feature, keys, fid_field=None, coerce=False):
     Concatenate all points yielded from points_in_shape
     return a list of Point objects
     """
-    if fid_field is not None:
-        fid = feature["properties"].get(fid_field)
-    else:
-        fid = feature.get("id")
+    fid = get_feature_id(feature, fid_field)
 
     geom = shape(feature["geometry"])
     groups = {key: feature["properties"].get(key) or 0 for key in keys}
@@ -121,3 +124,9 @@ def points_on_triangle(vertices, n):
     """
     x = np.sort(np.random.rand(2, n), axis=0)
     return np.column_stack([x[0], x[1] - x[0], 1.0 - x[1]]) @ vertices
+
+
+def get_feature_id(feature, fid_field=None):
+    if fid_field:
+        return feature["properties"][fid_field]
+    return feature.get("id")
