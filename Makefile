@@ -34,6 +34,20 @@ profile: tests/data/suffolk-2010-race.geojson
 	time python -m cProfile -o tests/data/suffolk.profile -m dorchester.cli $^ /tmp/suffolk.csv \
 	  --multiprocessing \
 	  --progress \
+	  --fid GISJOIN \
+	  -k White \
+	  -k "Black or African American" \
+	  -k "American Indian and Alaska Native" \
+	  -k "Asian" \
+	  -k "Native Hawaiian and Other Pacific Islander" \
+	  -k Other \
+	  -k "Two or More Races"
+
+null: tests/data/suffolk-2010-race.geojson
+	time python -m cProfile -o tests/data/suffolk.profile -m dorchester.cli $^ /tmp/suffolk.csv \
+	  --multiprocessing \
+	  --progress \
+	  --format null \
 	  --log dorchester.log \
 	  --fid GISJOIN \
 	  -k White \
@@ -47,7 +61,4 @@ profile: tests/data/suffolk-2010-race.geojson
 test:
 	pytest -n 4 -v
 
-null: tests/data/suffolk.geojson
-	time dorchester plot $^ /dev/null --key POP10 --progress --format null
-
-.PHONY: profile null
+.PHONY: profile null test

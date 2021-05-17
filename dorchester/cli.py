@@ -124,6 +124,7 @@ def plot(
     with Writer(dest, mode) as writer:
         if not progress:
             click.echo("Generating points ...")
+
         for points in generator:
             writer.write_all(points)
 

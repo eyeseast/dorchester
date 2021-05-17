@@ -5,7 +5,7 @@ import itertools
 import logging
 import multiprocessing
 import random
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from functools import partial
 
 import fiona
 import numpy as np
@@ -24,25 +24,16 @@ def generate_points(src, *keys, fid_field=None, coerce=False):
 
     For each feature, yield a generator of Point objects
     """
-
     with fiona.open(src) as source:
         for feature in source:
             log.debug(f"Feature: {get_feature_id(feature, fid_field)}")
             yield points_in_feature(feature, keys, fid_field=fid_field, coerce=coerce)
 
 
-def generate_points_mp(src, *keys, fid_field=None, coerce=False):
-    with fiona.open(src) as source, ProcessPoolExecutor() as pool:
-        futures = []
-        for feature in source:
-            f = pool.submit(
-                points_in_feature, feature, keys, fid_field=fid_field, coerce=coerce
-            )
-            futures.append(f)
-
-        for future in as_completed(futures):
-            log.debug(f"Finished feature: {get_feature_id(feature, fid_field)}")
-            yield future.result()
+def generate_points_mp(src, *keys, fid_field=None, coerce=False, chunksize=100):
+    with fiona.open(src) as source, multiprocessing.Pool() as pool:
+        f = partial(points_in_feature, keys=keys, fid_field=fid_field, coerce=coerce)
+        yield from pool.imap_unordered(f, source, chunksize)
 
 
 def points_in_feature(feature, keys, fid_field=None, coerce=False):
