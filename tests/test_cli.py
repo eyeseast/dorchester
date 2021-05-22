@@ -7,7 +7,9 @@ import fiona
 from click.testing import CliRunner
 from dorchester.cli import cli
 
-SUFFOLK = Path(__file__).parent / "data" / "suffolk.geojson"
+DATA = Path(__file__).parent / "data"
+SUFFOLK = DATA / "suffolk.geojson"
+SUFFOLK_RACE = DATA / "suffolk-2010-race.geojson"
 
 
 def test_version():
@@ -158,6 +160,71 @@ def test_suffolk_county_mp(tmpdir):
         assert len(points) == population
 
 
+def test_suffolk_race(tmpdir):
+    dest = tmpdir / "suffolk-race.csv"
+    runner = CliRunner()
+
+    # found by running SQL sum on suffolk-2010-race.geojson
+    count = 5662
+    population = 722023
+    totals = {
+        "White": 404269,
+        "Black or African American": 156292,
+        "Other": 70315,
+        "Asian": 59429,
+        "Two or More Races": 28442,
+        "American Indian and Alaska Native": 2984,
+        "Native Hawaiian and Other Pacific Islander": 292,
+    }
+
+    args = [
+        "plot",
+        str(SUFFOLK_RACE),
+        str(dest),
+        "--multiprocessing",
+        "--fid",
+        "GISJOIN",
+        "--count",
+        str(count),
+        "-k",
+        "White",
+        "-k",
+        "Black or African American",
+        "-k",
+        "American Indian and Alaska Native",
+        "-k",
+        "Asian",
+        "-k",
+        "Native Hawaiian and Other Pacific Islander",
+        "-k",
+        "Other",
+        "-k",
+        "Two or More Races",
+    ]
+
+    with runner.isolated_filesystem():
+        result = runner.invoke(cli, args)
+
+        assert result.exit_code == 0
+        assert dest.exists()
+
+        points = list(csv.DictReader(dest.open()))
+        groups = regroup(points, lambda p: p["group"])
+
+        assert len(points) == population
+
+        for k, v in groups.items():
+            assert len(v) == totals[k]
+
+
 def decode_json_newlines(file):
     for line in file:
         yield json.loads(line.strip())
+
+
+def regroup(iterable, key):
+    groups = {}
+    iterable = sorted(iterable, key=key)
+    for key, group in itertools.groupby(iterable, key):
+        groups[key] = list(group)
+    return groups

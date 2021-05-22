@@ -16,6 +16,9 @@ from .point import Point
 
 log = logging.getLogger("dorchester")
 
+# because I might change this later
+CHUNKSIZE = 500
+
 
 def generate_points(src, *keys, fid_field=None, coerce=False):
     """
@@ -30,10 +33,10 @@ def generate_points(src, *keys, fid_field=None, coerce=False):
             yield points_in_feature(feature, keys, fid_field=fid_field, coerce=coerce)
 
 
-def generate_points_mp(src, *keys, fid_field=None, coerce=False, chunksize=100):
+def generate_points_mp(src, *keys, fid_field=None, coerce=False, chunksize=CHUNKSIZE):
     with fiona.open(src) as source, multiprocessing.Pool() as pool:
         f = partial(points_in_feature, keys=keys, fid_field=fid_field, coerce=coerce)
-        yield from pool.imap_unordered(f, source, chunksize)
+        yield from pool.imap(f, source, chunksize)
 
 
 def points_in_feature(feature, keys, fid_field=None, coerce=False):
